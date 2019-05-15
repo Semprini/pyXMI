@@ -3,7 +3,8 @@ source = './test_recipie/test.xmi'
 templates = [
     { 
         'source':'pojos.java',
-        'dest':'c:/temp/{{package.name}}.java'
+        'level':'class',
+        'dest':'c:/temp/{{cls.package.path}}/{{cls.name}}.java'
     }
 ]
 

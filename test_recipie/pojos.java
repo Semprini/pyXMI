@@ -1,19 +1,19 @@
-package nz.co.genesis-energy.{{ package.parent.name }}.{{ package.name }};
+package nz.co.genesis-energy.{{ cls.package.parent.name }}.{{ cls.package.name }};
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-{% for child in package.classes %}@Entity
-public class {{ child.name }}()
+@Entity
+public class {{ cls.name }}()
 {
-    {% for attr in child.attributes %}{% if attr.is_id %}
+    {% for attr in cls.attributes %}{% if attr.is_id %}
     @Id{% endif %}
     @Column (name = "{{attr.name}}"{% if attr.dest_type == 'String' %}, length={{attr.length}}{% endif %}){% if attr.association %}
     @Expandable (name = "{{attr.name}}", expandableClass = {{ attr.type }}.class){% endif %}
     private {{attr.dest_type}} {{attr.name}};
     {% endfor %}
-    {% for attr in child.attributes %}
+    {% for attr in cls.attributes %}
     public {{ attr.dest_type }} get{{ attr.name }}() {
         return {{ attr.name }};
     }
@@ -24,5 +24,4 @@ public class {{ child.name }}()
     {% endfor %}
 }
 
-{% endfor %}
 

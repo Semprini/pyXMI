@@ -25,6 +25,11 @@ class UMLPackage(object):
         self.name = element.get('name')
         self.id = element.get('{%s}id'%ns['xmi'])
 
+        if self.parent is None:
+            self.path = '/' + self.root_package.name + '/'
+        else:
+            self.path = self.parent.path + self.name + '/'
+
         for child in element:
             e_type = child.get('{%s}type'%ns['xmi'])
             
@@ -39,6 +44,8 @@ class UMLPackage(object):
                 if cls.name is not None:
                     self.classes.append( cls )
 
+        print("Parsed package with {} classes: {}{}".format( len(self.classes), self.path, self.name ) )
+        
 
     def parse_associations(self):
         for cls in self.classes:
@@ -106,6 +113,8 @@ class UMLAttribute(object):
         self.name = element.get('name')
         self.id = element.get('{%s}id'%ns['xmi'])
         
+        #Detail is sparx sprecific
+        #TODO: Put modelling tool in settings and use tool specific parser here
         detail = root.xpath("//attribute[@xmi:idref='%s']"%self.id, namespaces=ns)[0]
         properties = detail.find('properties')
         self.type = properties.get('type')
@@ -114,15 +123,16 @@ class UMLAttribute(object):
         else:
             self.dest_type = self.settings.types[properties.get('type')]
 
-        if self.type == 'string':
-            self.length = 100
-            
         xrefs = detail.find('xrefs')
         if xrefs.get('value') is not None and 'NAME=isID' in xrefs.get('value'):
             self.is_id = True
         else:
             self.is_id = False
             
+        #Todo: decide how to include string lengths in UML
+        if self.type == 'string':
+            self.length = 100
+
 
     def parse_association(self, element, root ):
         self.id = element.get('{%s}id'%ns['xmi'])
@@ -131,18 +141,3 @@ class UMLAttribute(object):
         self.destination_id = dest_element.get('{%s}idref'%ns['xmi'])
         self.association = 'ManyToOne'
         
-        #detail = root.xpath("//packagedElement[@xmi:id='%s']"%self.association_id, namespaces=ns)[0]
-        #destination = root.xpath("//packagedElement[@xmi:id='%s']"%self.destination_id, namespaces=ns)[0]
-        #self.name = destination.get('name').lower()
-        #self.type = destination.get('name')
-
-        #dest_detail_class = root.xpath("//element[@xmi:idref='%s']"%self.destination_id, namespaces=ns)[0]
-        #dest_detail_attrs = dest_detail_class.find('attributes')
-        #for attr in dest_detail_attrs:
-        #    xrefs = attr.find('xrefs')
-        #    if xrefs.get('value') is not None and 'NAME=isID' in xrefs.get('value'):
-        #        properties = attr.find('properties')
-        #        self.dest_type = self.settings.types[properties.get('type')]
-        #        if properties.get('type') == 'string':
-        #            self.length = 100
-                
