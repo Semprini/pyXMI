@@ -32,6 +32,7 @@
 						<type xmi:idref="EAJava_string"/>
 					</ownedAttribute>
 				</packagedElement>
+				<packagedElement xmi:type="uml:Package" xmi:id="EAPK_FC818D30_D10B_4fca_815D_246FCF135030" name="Account" visibility="public"/>
 			</packagedElement>
 		</packagedElement>
 	</uml:Model>
@@ -68,7 +69,7 @@
 			<element xmi:idref="EAID_E90043C2_DC37_4241_9614_251BF1B8DA27" xmi:type="uml:Class" name="Account" scope="public">
 				<model package="EAPK_95DB44B5_F6E3_4fec_8658_94A2D500496A" tpos="0" ea_localid="215" ea_eleType="element"/>
 				<properties isSpecification="false" sType="Class" nType="0" scope="public" isRoot="false" isLeaf="false" isAbstract="false" isActive="false"/>
-				<project author="atkinp" version="1.0" phase="1.0" created="2019-05-14 09:21:38" modified="2019-05-14 09:21:41" complexity="1" status="Proposed"/>
+				<project author="atkinp" version="1.0" phase="1.0" created="2019-05-14 09:21:38" modified="2019-05-15 11:23:13" complexity="1" status="Proposed"/>
 				<code gentype="Java"/>
 				<style appearance="BackColor=-1;BorderColor=-1;BorderWidth=-1;FontColor=-1;VSwimLanes=1;HSwimLanes=1;BorderStyle=0;"/>
 				<tags/>
@@ -124,6 +125,20 @@
 				<links>
 					<Aggregation xmi:id="EAID_700B749B_09E6_4145_BF05_BEF99D3F202E" start="EAID_E90043C2_DC37_4241_9614_251BF1B8DA27" end="EAID_D0EAC5F1_D989_4f4d_9057_DBCF34B6D694"/>
 				</links>
+			</element>
+			<element xmi:idref="EAPK_FC818D30_D10B_4fca_815D_246FCF135030" xmi:type="uml:Package" name="Account" scope="public">
+				<model package2="EAID_FC818D30_D10B_4fca_815D_246FCF135030" package="EAPK_95DB44B5_F6E3_4fec_8658_94A2D500496A" tpos="0" ea_localid="50" ea_eleType="package"/>
+				<properties isSpecification="false" sType="Package" nType="0" scope="public"/>
+				<project author="atkinp" version="1.0" phase="1.0" created="2019-05-15 10:20:33" modified="2019-05-15 10:20:33" complexity="1" status="Proposed"/>
+				<code gentype="Java"/>
+				<style appearance="BackColor=-1;BorderColor=-1;BorderWidth=-1;FontColor=-1;VSwimLanes=1;HSwimLanes=1;BorderStyle=0;"/>
+				<tags/>
+				<xrefs/>
+				<extendedProperties tagged="0" package_name="Customer"/>
+				<packageproperties version="1.0"/>
+				<paths/>
+				<times created="2019-05-15 10:20:33" modified="2019-05-15 10:20:33"/>
+				<flags iscontrolled="FALSE" isprotected="FALSE" usedtd="FALSE" logxml="FALSE"/>
 			</element>
 		</elements>
 		<connectors>

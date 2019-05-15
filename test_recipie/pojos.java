@@ -13,8 +13,6 @@ public class {{ child.name }}()
     @Expandable (name = "{{attr.name}}", expandableClass = {{ attr.type }}.class){% endif %}
     private {{attr.dest_type}} {{attr.name}};
     {% endfor %}
-    
-    
     {% for attr in child.attributes %}
     public {{ attr.dest_type }} get{{ attr.name }}() {
         return {{ attr.name }};

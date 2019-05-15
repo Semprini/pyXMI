@@ -12,6 +12,7 @@ def parse_packagedElement(element, tree):
     if e_type in classes.keys():
         cls = classes[e_type]()
         cls.parse(element, tree)
+        cls.parse_associations()
         return cls
 
 
