@@ -4,7 +4,7 @@ templates = [
     { 
         'source':'pojos.java',
         'level':'class',
-        'dest':'c:/temp/{{cls.package.path}}/{{cls.name}}.java'
+        'dest':'./build/test_output/{{cls.package.path}}/{{cls.name}}.java'
     }
 ]
 

@@ -1,4 +1,4 @@
-package nz.co.genesis-energy.{{ cls.package.parent.name }}.{{ cls.package.name }};
+package nz.co.genesis_energy.{{ cls.package.parent.name }}.{{ cls.package.name }};
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

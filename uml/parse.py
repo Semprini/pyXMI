@@ -12,6 +12,7 @@ ns={
 class UMLPackage(object):
     def __init__(self, parent=None):
         self.classes = []
+        self.associations = []
         self.children = []
         self.parent = parent
         
@@ -24,6 +25,7 @@ class UMLPackage(object):
     def parse(self, element, root):
         self.name = element.get('name')
         self.id = element.get('{%s}id'%ns['xmi'])
+        self.element = element
 
         if self.parent is None:
             self.path = '/' + self.root_package.name + '/'
@@ -48,8 +50,24 @@ class UMLPackage(object):
         
 
     def parse_associations(self):
-        for cls in self.classes:
-            cls.parse_associations(self.root_package)
+        for child in self.element:
+            e_type = child.get('{%s}type'%ns['xmi'])
+            
+            if e_type == 'uml:Association':
+                for assoc in child:
+                    assoc_type = assoc.get('{%s}type'%ns['xmi'])
+                    assoc_id = assoc.get('{%s}id'%ns['xmi'])
+                    if assoc_id is not None and assoc_type == 'uml:Property' and assoc_id[:8] == 'EAID_src':
+                        assoc_source_elem = assoc.find('type')
+                        assoc_source_id = assoc_source_elem.get('{%s}idref'%ns['xmi'])
+                    if assoc_id is not None and assoc_type == 'uml:Property' and assoc_id[:8] == 'EAID_dst':
+                        assoc_dest_elem = assoc.find('type')
+                        assoc_dest_id = assoc_dest_elem.get('{%s}idref'%ns['xmi'])
+                source = self.root_package.find_by_id(assoc_source_id)
+                dest = self.root_package.find_by_id(assoc_dest_id)
+                association = UMLAssociation(self, source, dest)
+                association.parse(child)
+                self.associations.append(association)
 
         for child in self.children:
             child.parse_associations()
@@ -61,12 +79,29 @@ class UMLPackage(object):
                 return cls
 
         for child in self.children:
-            return child.find_by_id(id)
+            res = child.find_by_id(id)
+            if res is not None:
+                return res
 
+
+class UMLAssociation(object):
+    def __init__(self, package, source, dest):
+        self.package = package
+        self.source = source
+        self.dest = dest
+        source.associations_from.append(self)
+        dest.associations_to.append(self)
+        
+    def parse(self, package):
+        self.source_name = self.dest.name.lower()
+        self.dest_name = self.source.name.lower() + "s"
+        
 
 class UMLClass(object):
     def __init__(self, package):
         self.attributes = []
+        self.associations_from = []
+        self.associations_to = []
         self.package = package
 
 
@@ -78,11 +113,7 @@ class UMLClass(object):
             e_type = child.get('{%s}type'%ns['xmi'])
 
             if e_type == 'uml:Property':
-                if child.get('association') is not None:
-                    cls = UMLAttribute(self)
-                    cls.parse_association(child, root)
-                    self.attributes.append( cls )
-                elif child.get('name') is not None:
+                if child.get('association') is None and child.get('name') is not None:
                     cls = UMLAttribute(self)
                     cls.parse(child, root)
                     self.attributes.append( cls )
