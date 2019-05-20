@@ -8,7 +8,19 @@ ns={
     'NIEM_PSM_profile':'http://www.omg.org/spec/NIEM-UML/20130801/NIEM_PSM_Profile',
 }
 
-    
+def parse_uml(element, root):
+    """ Root package parser entrypoint.
+    """
+    e_type = element.get('{%s}type'%ns['xmi'])
+    if e_type == 'uml:Package':
+        package = UMLPackage()
+        package.parse(element, root)
+        package.parse_associations()
+        return package
+    else:
+        print('Non uml:Package element provided to packagedElement parser')
+
+
 class UMLPackage(object):
     def __init__(self, parent=None):
         self.classes = []
@@ -23,16 +35,21 @@ class UMLPackage(object):
 
 
     def parse(self, element, root):
+        """ Extract package details, call class parser for classes and self parser for sub-packages.
+        Associations are not done here, but in a 2nd pass using the parse_associations function.
+        """
         self.name = element.get('name')
         self.id = element.get('{%s}id'%ns['xmi'])
         self.element = element
         self.root_element = root
 
+        # Package path is hierarchical. Add the current path onto it's parent
         if self.parent is None:
             self.path = '/' + self.root_package.name + '/'
         else:
             self.path = self.parent.path + self.name + '/'
 
+        # Loop through all child elements and get classes and sub packages
         for child in element:
             e_type = child.get('{%s}type'%ns['xmi'])
             
@@ -51,6 +68,10 @@ class UMLPackage(object):
         
 
     def parse_associations(self):
+        """ Packages and classes should already have been parsed so now we link classes for each association.
+        This gets messy as XMI output varies based on association type. 
+        This supports both un-specified and source to destination directional associations
+        """
         for child in self.element:
             e_type = child.get('{%s}type'%ns['xmi'])
             e_id = child.get('{%s}id'%ns['xmi'])
@@ -59,6 +80,7 @@ class UMLPackage(object):
                 assoc_source_id = None
                 assoc_dest_id = None
                 for assoc in child:
+                    # If unspecified direction then both source and destination info are child elements within the association
                     assoc_type = assoc.get('{%s}type'%ns['xmi'])
                     assoc_id = assoc.get('{%s}id'%ns['xmi'])
                     if assoc_id is not None and assoc_type == 'uml:Property' and assoc_id[:8] == 'EAID_src':
@@ -70,6 +92,8 @@ class UMLPackage(object):
                         assoc_dest_type_elem = assoc.find('type')
                         assoc_dest_id = assoc_dest_type_elem.get('{%s}idref'%ns['xmi'])
                 
+                # If association direction is source to destination then 
+                # destination class info is found as an ownedAttribute in the source element
                 if assoc_dest_id is None:
                     for assoc in child:
                         if assoc.tag == 'memberEnd':
@@ -79,6 +103,7 @@ class UMLPackage(object):
                                 assoc_dest_type_elem = assoc_dest_elem.find('type')
                                 assoc_dest_id = assoc_dest_type_elem.get('{%s}idref'%ns['xmi'])
                 
+                # TODO: Raise error if we don't have a source and dest
                 source = self.root_package.find_by_id(assoc_source_id)
                 dest = self.root_package.find_by_id(assoc_dest_id)
                 association = UMLAssociation(self, source, dest)
@@ -90,6 +115,9 @@ class UMLPackage(object):
 
 
     def find_by_id(self, id):
+        """ Finds and instantiated UMLClass object with specified Id
+        Looks for classes part of this package and all sub-packages
+        """
         for cls in self.classes:
             if cls.id == id:
                 return cls

@@ -13,8 +13,8 @@ public class {{ cls.name }}()
     private {{attr.dest_type}} {{attr.name}};
     {% endfor %}
     {% for assoc in cls.associations_from %}
-    @Expandable (name = "{{assoc.source_name}}", expandableClass = {{ assoc.dest.type }}.class)
-    private {{assoc.dest.type}} {{assoc.source_name}};
+    @Expandable (name = "{{assoc.source_name}}", expandableClass = {{ assoc.dest.name }}.class)
+    private {{assoc.dest.name}} {{assoc.source_name}};
     {% endfor %}
 
     {% for attr in cls.attributes %}

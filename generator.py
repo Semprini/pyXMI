@@ -6,22 +6,9 @@ import importlib
 from lxml import etree
 from jinja2 import Template, Environment, FileSystemLoader
 
-from uml.parse import ns, UMLPackage, UMLClass, UMLAttribute
+from uml.parse import ns, parse_uml, UMLPackage, UMLClass, UMLAttribute
 
 settings = None
-
-classes = {
-    'uml:Package':UMLPackage,
-}
-
-
-def parse_packagedElement(element, tree):
-    e_type = element.get('{%s}type'%ns['xmi'])
-    if e_type in classes.keys():
-        cls = classes[e_type]()
-        cls.parse(element, tree)
-        cls.parse_associations()
-        return cls
 
 
 def output(package):
@@ -64,7 +51,7 @@ def parse(recipie_path):
 
 	for base in model:
 		if base.tag == 'packagedElement':
-			package = parse_packagedElement(base, tree)
+			package = parse_uml(base, tree)
 			print("Base Package: "+package.name)
 			output(package)
 
