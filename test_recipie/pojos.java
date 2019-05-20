@@ -24,5 +24,3 @@ public class {{ cls.name }}()
     }    
     {% endfor %}
 }
-
-
