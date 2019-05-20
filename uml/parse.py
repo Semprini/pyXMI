@@ -26,6 +26,7 @@ class UMLPackage(object):
         self.name = element.get('name')
         self.id = element.get('{%s}id'%ns['xmi'])
         self.element = element
+        self.root_element = root
 
         if self.parent is None:
             self.path = '/' + self.root_package.name + '/'
@@ -52,21 +53,36 @@ class UMLPackage(object):
     def parse_associations(self):
         for child in self.element:
             e_type = child.get('{%s}type'%ns['xmi'])
+            e_id = child.get('{%s}id'%ns['xmi'])
             
             if e_type == 'uml:Association':
+                assoc_source_id = None
+                assoc_dest_id = None
                 for assoc in child:
                     assoc_type = assoc.get('{%s}type'%ns['xmi'])
                     assoc_id = assoc.get('{%s}id'%ns['xmi'])
                     if assoc_id is not None and assoc_type == 'uml:Property' and assoc_id[:8] == 'EAID_src':
-                        assoc_source_elem = assoc.find('type')
-                        assoc_source_id = assoc_source_elem.get('{%s}idref'%ns['xmi'])
+                        assoc_source_elem = assoc
+                        assoc_source_type_elem = assoc.find('type')
+                        assoc_source_id = assoc_source_type_elem.get('{%s}idref'%ns['xmi'])
                     if assoc_id is not None and assoc_type == 'uml:Property' and assoc_id[:8] == 'EAID_dst':
-                        assoc_dest_elem = assoc.find('type')
-                        assoc_dest_id = assoc_dest_elem.get('{%s}idref'%ns['xmi'])
+                        assoc_dest_elem = assoc
+                        assoc_dest_type_elem = assoc.find('type')
+                        assoc_dest_id = assoc_dest_type_elem.get('{%s}idref'%ns['xmi'])
+                
+                if assoc_dest_id is None:
+                    for assoc in child:
+                        if assoc.tag == 'memberEnd':
+                            assoc_idref = assoc.get('{%s}idref'%ns['xmi'])
+                            if assoc_idref[:8] == 'EAID_dst':
+                                assoc_dest_elem = self.root_element.xpath("//ownedAttribute[@xmi:id='%s']"%assoc_idref, namespaces=ns)[0]
+                                assoc_dest_type_elem = assoc_dest_elem.find('type')
+                                assoc_dest_id = assoc_dest_type_elem.get('{%s}idref'%ns['xmi'])
+                
                 source = self.root_package.find_by_id(assoc_source_id)
                 dest = self.root_package.find_by_id(assoc_dest_id)
                 association = UMLAssociation(self, source, dest)
-                association.parse(child)
+                association.parse(child, assoc_source_elem, assoc_dest_elem)
                 self.associations.append(association)
 
         for child in self.children:
@@ -92,10 +108,43 @@ class UMLAssociation(object):
         source.associations_from.append(self)
         dest.associations_to.append(self)
         
-    def parse(self, package):
+    def parse(self, element, source_element, dest_element):
         self.source_name = self.dest.name.lower()
-        self.dest_name = self.source.name.lower() + "s"
+        self.dest_name = self.source.name.lower()
         
+        source_lower = source_element.find('lowerValue').get('value')
+        if source_lower == '-1':
+            source_lower = '*'
+        source_upper = source_element.find('upperValue').get('value')
+        if source_upper == '-1':
+            source_upper = '*'
+        self.source_multiplicity = (source_lower, source_upper)
+
+        dest_lower = dest_element.find('lowerValue').get('value')
+        if dest_lower == '-1':
+            dest_lower = '*'
+        dest_upper = dest_element.find('upperValue').get('value')
+        if dest_upper == '-1':
+            dest_upper = '*'
+        self.dest_multiplicity = (dest_lower, dest_upper)
+        
+        print( '{}:{} to {}:{}'.format(self.source.name, self.source_multiplicity, self.dest.name, self.dest_multiplicity))
+        
+        if self.source_multiplicity[1] == '*' and self.dest_multiplicity[1] in ('0','1'):
+            self.association_type = 'ManyToOne'
+        elif self.dest_multiplicity[1] == '*' and self.source_multiplicity[1] in ('0','1'):
+            self.association_type = 'OneToMany'
+        elif self.dest_multiplicity[1] == '*' and self.source_multiplicity[1] == '*':
+            self.association_type = 'ManyToMany'
+        elif self.dest_multiplicity[1] in ('0','1') and self.source_multiplicity[1] in ('0','1'):
+            self.association_type = 'OneToOne'
+
+        if self.source_multiplicity[1] == '*':
+            self.source_name += 's'
+        if self.dest_multiplicity[1] == '*':
+            self.dest_name += 's'
+        #print('Assoc in {}: {} to {}: type = {}'.format(self.source.name, self.source_name, self.dest_name, self.association_type) )
+
 
 class UMLClass(object):
     def __init__(self, package):
@@ -119,19 +168,6 @@ class UMLClass(object):
                     self.attributes.append( cls )
 
 
-    def parse_associations(self, root_package):
-        for attr in self.attributes:
-            if attr.association is not None:
-                attr.destination = root_package.find_by_id(attr.destination_id)
-                if attr.destination is not None:
-                    attr.name = attr.destination.name.lower()
-                    attr.type = attr.destination.name
-                    for dest_attr in attr.destination.attributes:
-                        if dest_attr.is_id:
-                            attr.dest_type = dest_attr.dest_type
-                            attr.length = dest_attr.length
-
-
 class UMLAttribute(object):
     def __init__(self, parent=None):
         self.parent = parent
@@ -151,9 +187,11 @@ class UMLAttribute(object):
         self.type = properties.get('type')
         if self.type[:4]=='enum':
             self.dest_type = 'enum'
-        else:
+        elif properties.get('type') in self.settings.types.keys():
             self.dest_type = self.settings.types[properties.get('type')]
-
+        else:
+            self.dest_type = properties.get('type')
+            
         xrefs = detail.find('xrefs')
         if xrefs.get('value') is not None and 'NAME=isID' in xrefs.get('value'):
             self.is_id = True
@@ -163,12 +201,4 @@ class UMLAttribute(object):
         #Todo: decide how to include string lengths in UML
         if self.type == 'string':
             self.length = 100
-
-
-    def parse_association(self, element, root ):
-        self.id = element.get('{%s}id'%ns['xmi'])
-        self.association_id = element.get('association')
-        dest_element = element.find('type')
-        self.destination_id = dest_element.get('{%s}idref'%ns['xmi'])
-        self.association = 'ManyToOne'
         

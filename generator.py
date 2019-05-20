@@ -27,7 +27,10 @@ def output(package):
         filename_template = Template(template_definition['dest'])
         
         if template_definition['level'] == 'package':
-            filename = filename_template.render(package=package)
+            filename = os.path.abspath(filename_template.render(package=package))
+            dirname = os.path.dirname(filename)
+            if not os.path.exists(dirname):
+                os.makedirs(dirname)
             print("Writing: " + filename)
             with open(filename, 'w') as fh:
                 fh.write( template.render(package=package) )

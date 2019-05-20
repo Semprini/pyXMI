@@ -2,9 +2,9 @@ source = './test_recipie/test.xmi'
 
 templates = [
     { 
-        'source':'pojos.java',
-        'level':'class',
-        'dest':'./build/test_output/{{cls.package.path}}/{{cls.name}}.java'
+        'source':'entities.jdl',
+        'level':'package',
+        'dest':'./build/test_output{{package.path}}{{package.name}}.jdl'
     }
 ]
 
