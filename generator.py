@@ -1,3 +1,5 @@
+#!/usr/bin/python
+import sys
 import os
 import importlib
 
@@ -48,7 +50,11 @@ def output(package):
     for child in package.children:
         output(child)
 
-recipie_path = 'test_recipie'
+if len(sys.argv) == 1:
+	recipie_path = 'test_recipie'
+else:
+	recipie_path = str(sys.argv)[1]
+ 
 
 os.environ.setdefault("PYXMI_SETTINGS_MODULE", recipie_path+".settings")
 settings = importlib.import_module(recipie_path+".settings")
