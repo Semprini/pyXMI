@@ -128,7 +128,7 @@ class UMLAssociation(object):
             dest_upper = '*'
         self.dest_multiplicity = (dest_lower, dest_upper)
         
-        print( '{}:{} to {}:{}'.format(self.source.name, self.source_multiplicity, self.dest.name, self.dest_multiplicity))
+        #print( '{}:{} to {}:{}'.format(self.source.name, self.source_multiplicity, self.dest.name, self.dest_multiplicity))
         
         if self.source_multiplicity[1] == '*' and self.dest_multiplicity[1] in ('0','1'):
             self.association_type = 'ManyToOne'

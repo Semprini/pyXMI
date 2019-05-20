@@ -8,6 +8,8 @@ from jinja2 import Template, Environment, FileSystemLoader
 
 from uml.parse import ns, UMLPackage, UMLClass, UMLAttribute
 
+settings = None
+
 classes = {
     'uml:Package':UMLPackage,
 }
@@ -50,22 +52,28 @@ def output(package):
     for child in package.children:
         output(child)
 
-if len(sys.argv) == 1:
-	recipie_path = 'test_recipie'
-else:
-	recipie_path = str(sys.argv)[1]
- 
 
-os.environ.setdefault("PYXMI_SETTINGS_MODULE", recipie_path+".settings")
-settings = importlib.import_module(recipie_path+".settings")
+def parse(recipie_path):
+	global settings
+	os.environ.setdefault("PYXMI_SETTINGS_MODULE", recipie_path+".settings")
+	settings = importlib.import_module(recipie_path+".settings")
+	
+	tree = etree.parse(settings.source)
+	model=tree.find('uml:Model',ns)
+	extension=tree.find('xmi:Extension',ns)
 
-tree = etree.parse(settings.source)
-model=tree.find('uml:Model',ns)
-extension=tree.find('xmi:Extension',ns)
+	for base in model:
+		if base.tag == 'packagedElement':
+			package = parse_packagedElement(base, tree)
+			print("Base Package: "+package.name)
+			output(package)
 
-for base in model:
-    if base.tag == 'packagedElement':
-        package = parse_packagedElement(base, tree)
-        print("Base Package: "+package.name)
-        output(package)
 
+if __name__ == '__main__':
+	if len(sys.argv) == 1:
+		recipie_path = 'test_recipie'
+	else:
+		recipie_path = str(sys.argv)[1]
+	 
+	parse(recipie_path)
+	
