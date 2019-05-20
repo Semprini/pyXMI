@@ -18,7 +18,7 @@ def parse_uml(element, root):
         package.parse_associations()
         return package
     else:
-        print('Non uml:Package element provided to packagedElement parser')
+        print('Error - Non uml:Package element provided to packagedElement parser')
 
 
 class UMLPackage(object):
