@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import sys
 import os
-import importlib
+import json
 
 from lxml import etree
 from jinja2 import Template, Environment, FileSystemLoader
@@ -13,7 +13,7 @@ settings = None
 
 def output(package):
     env = Environment(loader=FileSystemLoader(recipie_path))
-    for template_definition in settings.templates:
+    for template_definition in settings['templates']:
         template = env.get_template(template_definition['source'])
         filename_template = Template(template_definition['dest'])
         
@@ -42,10 +42,14 @@ def output(package):
 
 def parse(recipie_path):
     global settings
-    os.environ.setdefault("PYXMI_SETTINGS_MODULE", recipie_path+".settings")
-    settings = importlib.import_module(recipie_path+".settings")
     
-    tree = etree.parse(settings.source)
+    config_filename = recipie_path+"/config.json"
+    os.environ.setdefault("PYXMI_SETTINGS_MODULE", config_filename )
+
+    with open(config_filename, 'r') as config_file:
+        settings=json.loads(config_file.read())
+
+    tree = etree.parse(settings['source'])
     model=tree.find('uml:Model',ns)
     extension=tree.find('xmi:Extension',ns)
 

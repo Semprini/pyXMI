@@ -1,5 +1,5 @@
 import os
-import importlib
+import json
 
 ns={
 	'uml':'http://schema.omg.org/spec/UML/2.1',
@@ -8,9 +8,16 @@ ns={
     'NIEM_PSM_profile':'http://www.omg.org/spec/NIEM-UML/20130801/NIEM_PSM_Profile',
 }
 
+settings = None
+
 def parse_uml(element, root):
     """ Root package parser entrypoint.
     """
+    global settings
+    
+    with open(os.environ.get('PYXMI_SETTINGS_MODULE'), 'r') as config_file:
+        settings=json.loads(config_file.read())
+
     e_type = element.get('{%s}type'%ns['xmi'])
     if e_type == 'uml:Package':
         package = UMLPackage()
@@ -19,6 +26,7 @@ def parse_uml(element, root):
         return package
     else:
         print('Error - Non uml:Package element provided to packagedElement parser')
+
 
 
 class UMLPackage(object):
@@ -199,11 +207,11 @@ class UMLClass(object):
 class UMLAttribute(object):
     def __init__(self, parent=None):
         self.parent = parent
-        self.settings = importlib.import_module(os.environ.get('PYXMI_SETTINGS_MODULE'))
         self.association = None
 
 
     def parse(self, element, root):
+        global settings
         
         self.name = element.get('name')
         self.id = element.get('{%s}id'%ns['xmi'])
@@ -215,8 +223,8 @@ class UMLAttribute(object):
         self.type = properties.get('type')
         if self.type[:4]=='enum':
             self.dest_type = 'enum'
-        elif properties.get('type') in self.settings.types.keys():
-            self.dest_type = self.settings.types[properties.get('type')]
+        elif properties.get('type') in settings['types'].keys():
+            self.dest_type = settings['types'][properties.get('type')]
         else:
             self.dest_type = properties.get('type')
             
