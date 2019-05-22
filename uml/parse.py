@@ -111,6 +111,7 @@ class UMLPackage(object):
                                 assoc_dest_type_elem = assoc_dest_elem.find('type')
                                 assoc_dest_id = assoc_dest_type_elem.get('{%s}idref'%ns['xmi'])
                 
+                #print("association: src id={} dest id={}".format(assoc_source_id,assoc_dest_id))
                 # TODO: Raise error if we don't have a source and dest
                 source = self.root_package.find_by_id(assoc_source_id)
                 dest = self.root_package.find_by_id(assoc_dest_id)
