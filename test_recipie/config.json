@@ -1,5 +1,6 @@
 {
     "source": "./test_recipie/test.xmi",
+    "model_package":"Customer",
     "templates": [
         { 
             "source":"entities.jdl",
