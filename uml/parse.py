@@ -22,6 +22,7 @@ def parse_uml(element, root):
     if e_type == 'uml:Package':
         package = UMLPackage()
         package.parse(element, root)
+        package.parse_inheritance()
         package.parse_associations()
         return package
     else:
@@ -123,6 +124,17 @@ class UMLPackage(object):
             child.parse_associations()
 
 
+    def parse_inheritance(self):
+        
+        for cls in self.classes:
+            if cls.supertype_id is not None:
+                cls.supertype = self.root_package.find_by_id(cls.supertype_id)
+                print( "set supertpye of {} to {}".format(cls.name, cls.supertype.name) )
+        
+        for child in self.children:
+            child.parse_inheritance()
+
+
     def find_by_id(self, id):
         """ Finds and instantiated UMLClass object with specified Id
         Looks for classes part of this package and all sub-packages
@@ -189,11 +201,22 @@ class UMLClass(object):
         self.associations_from = []
         self.associations_to = []
         self.package = package
+        self.supertype = None
+        self.supertype_id = None
+        self.stereotype = None
 
 
     def parse(self, element, root):
         self.name = element.get('name')
         self.id = element.get('{%s}id'%ns['xmi'])
+        if element.get('isAbstract') == 'true':
+            self.is_abstract = True
+        else:
+            self.is_abstract = False
+
+        supertype_element = element.find('generalization')
+        if supertype_element is not None:
+            self.supertype_id = supertype_element.get('general')
 
         for child in element:    
             e_type = child.get('{%s}type'%ns['xmi'])
@@ -204,11 +227,19 @@ class UMLClass(object):
                     cls.parse(child, root)
                     self.attributes.append( cls )
 
+        #Detail is sparx sprecific
+        #TODO: Put modelling tool in settings and use tool specific parser here
+        detail = root.xpath("//element[@xmi:idref='%s']"%self.id, namespaces=ns)[0]
+        properties = detail.find('properties')
+        self.stereotype = properties.get('stereotype')
+
 
 class UMLAttribute(object):
     def __init__(self, parent=None):
         self.parent = parent
         self.association = None
+        self.is_unique = False
+        self.stereotype = None
 
 
     def parse(self, element, root):
@@ -216,6 +247,7 @@ class UMLAttribute(object):
         
         self.name = element.get('name')
         self.id = element.get('{%s}id'%ns['xmi'])
+        self.visibility = element.get('visibility')
         
         #Detail is sparx sprecific
         #TODO: Put modelling tool in settings and use tool specific parser here
@@ -238,4 +270,14 @@ class UMLAttribute(object):
         #Todo: decide how to include string lengths in UML
         if self.type == 'string':
             self.length = 100
+
+        stereotype = detail.find('stereotype')
+        if stereotype is not None:
+            self.stereotype = stereotype.get('stereotype')
+        
+        constraints = detail.find('Constraints')
+        if constraints is not None:
+            for constraint in constraints:
+                if constraint.get('name') == 'unique':
+                    self.is_unique = True
         
