@@ -24,6 +24,7 @@ def parse_uml(element, root):
         package.parse(element, root)
         package.parse_inheritance()
         package.parse_associations()
+        package.parse_instances()
         return package
     else:
         print('Error - Non uml:Package element provided to packagedElement parser')
@@ -35,6 +36,7 @@ class UMLPackage(object):
         self.classes = []
         self.associations = []
         self.children = []
+        self.instances = []
         self.parent = parent
         
         if self.parent is None:
@@ -116,9 +118,12 @@ class UMLPackage(object):
                 # TODO: Raise error if we don't have a source and dest
                 source = self.root_package.find_by_id(assoc_source_id)
                 dest = self.root_package.find_by_id(assoc_dest_id)
-                association = UMLAssociation(self, source, dest)
-                association.parse(child, assoc_source_elem, assoc_dest_elem)
-                self.associations.append(association)
+                if source is not None and dest is not None:
+                    association = UMLAssociation(self, source, dest)
+                    association.parse(child, assoc_source_elem, assoc_dest_elem)
+                    self.associations.append(association)
+                else:
+                    print("Unable to create association id={}".format(e_id))
 
         for child in self.children:
             child.parse_associations()
@@ -135,6 +140,18 @@ class UMLPackage(object):
             child.parse_inheritance()
 
 
+    def parse_instances(self):
+        for child in self.element:
+            e_type = child.get('{%s}type'%ns['xmi'])
+            if e_type == 'uml:InstanceSpecification':
+                cls = UMLInstance(self)
+                cls.parse(child)
+                if cls.name is not None:
+                    self.instances.append( cls )
+        for child in self.children:
+            child.parse_instances()
+
+
     def find_by_id(self, id):
         """ Finds and instantiated UMLClass object with specified Id
         Looks for classes part of this package and all sub-packages
@@ -147,6 +164,17 @@ class UMLPackage(object):
             res = child.find_by_id(id)
             if res is not None:
                 return res
+
+
+class UMLInstance(object):
+    def __init__(self, package):
+        self.associations_from = []
+        self.associations_to = []
+        self.package = package
+
+    def parse(self, element):
+        self.name = element.get('name')
+        self.id = element.get('{%s}id'%ns['xmi'])
 
 
 class UMLAssociation(object):

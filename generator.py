@@ -51,12 +51,14 @@ def parse(recipie_path):
 
     tree = etree.parse(settings['source'])
     model=tree.find('uml:Model',ns)
-    model=model.xpath("//packagedElement[@name='%s']"%settings['model_package'], namespaces=ns)[0]
+    models=model.xpath("//packagedElement[@name='%s']"%settings['model_package'], namespaces=ns)
+    if len(models) == 0:
+        print("Root packaged element not found. Settings has:{}".format(settings['model_package']))
+        return
+    model=models[0]
     
     extension=tree.find('xmi:Extension',ns)
 
-    #for base in model:
-    #    if base.tag == 'packagedElement':
     package = parse_uml(model, tree)
     print("Base Package: "+package.name)
     output(package)
