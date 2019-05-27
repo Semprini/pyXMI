@@ -11,7 +11,7 @@ from uml.parse import ns, parse_uml, UMLPackage, UMLClass, UMLAttribute
 settings = None
 
 
-def output(package):
+def output_model(package):
     env = Environment(loader=FileSystemLoader(recipie_path))
     for template_definition in settings['templates']:
         template = env.get_template(template_definition['source'])
@@ -37,7 +37,37 @@ def output(package):
                     fh.write( template.render(cls=cls) )
 
     for child in package.children:
-        output(child)
+        output_model(child)
+
+
+def output_test_cases(test_cases):
+    for case in test_cases:
+        serialised = json.dumps(serialize_instance(case), indent=2)
+        
+        for template_definition in settings['test_templates']:
+            filename_template = Template(template_definition['dest'])
+            filename = os.path.abspath(filename_template.render(ins=case))
+            dirname = os.path.dirname(filename)
+            if not os.path.exists(dirname):
+                os.makedirs(dirname)
+            print("Writing: " + filename)
+            with open(filename, 'w') as fh:
+                fh.write( serialised )
+
+
+def serialize_instance(instance):
+    ret = {}
+
+    for attr in instance.attributes:
+        ret[attr.name] = attr.value
+    
+    for assoc in instance.associations_to:
+        if assoc.source_multiplicity[1] == '*':
+            if assoc.source.name not in ret.keys():
+                ret[assoc.source.name] = [serialize_instance(assoc.source),]
+            else:
+                ret[assoc.source.name].append(serialize_instance(assoc.source))
+    return ret
 
 
 def parse(recipie_path):
@@ -51,17 +81,18 @@ def parse(recipie_path):
 
     tree = etree.parse(settings['source'])
     model=tree.find('uml:Model',ns)
-    models=model.xpath("//packagedElement[@name='%s']"%settings['model_package'], namespaces=ns)
-    if len(models) == 0:
-        print("Root packaged element not found. Settings has:{}".format(settings['model_package']))
+    root_package=model.xpath("//packagedElement[@name='%s']"%settings['root_package'], namespaces=ns)
+    if len(root_package) == 0:
+        print("Root packaged element not found. Settings has:{}".format(settings['root_package']))
         return
-    model=models[0]
+    root_package=root_package[0]
     
     extension=tree.find('xmi:Extension',ns)
 
-    package = parse_uml(model, tree)
-    print("Base Package: "+package.name)
-    output(package)
+    model_package, test_cases = parse_uml(root_package, tree)
+    print("Base Model Package: "+model_package.name)
+    output_model(model_package)
+    output_test_cases(test_cases)
 
 
 if __name__ == '__main__':

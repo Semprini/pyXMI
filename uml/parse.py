@@ -14,21 +14,57 @@ def parse_uml(element, root):
     """ Root package parser entrypoint.
     """
     global settings
+    model_package = None
+    test_package = None
     
     with open(os.environ.get('PYXMI_SETTINGS_MODULE'), 'r') as config_file:
         settings=json.loads(config_file.read())
 
-    e_type = element.get('{%s}type'%ns['xmi'])
-    if e_type == 'uml:Package':
-        package = UMLPackage()
-        package.parse(element, root)
-        package.parse_inheritance()
-        package.parse_associations()
-        package.parse_instances()
-        return package
-    else:
-        print('Error - Non uml:Package element provided to packagedElement parser')
 
+    print( "Parsing models" )
+    model_element=element.xpath("//packagedElement[@name='%s']"%settings['model_package'], namespaces=ns)
+    if len(model_element) == 0:
+        raise ValueError("Model packaged element not found. Settings has:{}".format(settings['model_package']))
+    model_element=model_element[0]
+
+    e_type = model_element.get('{%s}type'%ns['xmi'])
+    if e_type == 'uml:Package':
+        model_package = UMLPackage()
+        model_package.parse(model_element, root)
+        model_package.parse_inheritance()
+        model_package.parse_associations()
+    else:
+        raise ValueError('Error - Non uml:Package element provided to packagedElement parser')
+
+    print( "Parsing test cases" )
+    test_element=element.xpath("//packagedElement[@name='%s']"%settings['test_package'], namespaces=ns)
+    if len(test_element) == 0:
+        raise ValueError("Test packaged element not found. Settings has:{}".format(settings['test_package']))
+    test_element=test_element[0]
+
+    e_type = test_element.get('{%s}type'%ns['xmi'])
+    if e_type == 'uml:Package':
+        test_package = UMLPackage()
+        test_package.parse(test_element, root)
+        test_package.parse_associations()
+
+    test_cases = parse_test_cases(test_package)
+    return model_package, test_cases
+
+
+def parse_test_cases(package):
+    test_cases = []
+    
+    for instance in package.instances:
+        if instance.stereotype in ['request','response']:
+            test_cases.append(instance)
+    
+    for child in package.children:
+        res = parse_test_cases(child)
+        if res != []:
+            test_cases += res
+    
+    return test_cases
 
 
 class UMLPackage(object):
@@ -75,7 +111,13 @@ class UMLPackage(object):
                 if cls.name is not None:
                     self.classes.append( cls )
 
-        print("Parsed package with {} classes: {}{}".format( len(self.classes), self.path, self.name ) )
+            elif e_type == 'uml:InstanceSpecification':
+                ins = UMLInstance(self)
+                ins.parse(child, root)
+                if ins.name is not None:
+                    self.instances.append( ins )
+                    
+        print("Parsed package with {} classes & {} instances: {}{}".format( len(self.classes), len(self.instances), self.path, self.name ) )
         
 
     def parse_associations(self):
@@ -140,25 +182,17 @@ class UMLPackage(object):
             child.parse_inheritance()
 
 
-    def parse_instances(self):
-        for child in self.element:
-            e_type = child.get('{%s}type'%ns['xmi'])
-            if e_type == 'uml:InstanceSpecification':
-                cls = UMLInstance(self)
-                cls.parse(child)
-                if cls.name is not None:
-                    self.instances.append( cls )
-        for child in self.children:
-            child.parse_instances()
-
-
     def find_by_id(self, id):
-        """ Finds and instantiated UMLClass object with specified Id
+        """ Finds UMLClass or UMLInstance object with specified Id
         Looks for classes part of this package and all sub-packages
         """
         for cls in self.classes:
             if cls.id == id:
                 return cls
+
+        for ins in self.instances:
+            if ins.id == id:
+                return ins
 
         for child in self.children:
             res = child.find_by_id(id)
@@ -168,14 +202,34 @@ class UMLPackage(object):
 
 class UMLInstance(object):
     def __init__(self, package):
+        self.attributes = []
         self.associations_from = []
         self.associations_to = []
         self.package = package
+        self.stereotype = None
 
-    def parse(self, element):
+    def parse(self, element, root):
         self.name = element.get('name')
         self.id = element.get('{%s}id'%ns['xmi'])
 
+        #Detail is sparx sprecific
+        #TODO: Put modelling tool in settings and use tool specific parser here
+        detail = root.xpath("//element[@xmi:idref='%s']"%self.id, namespaces=ns)[0]
+        properties = detail.find('properties')
+        self.stereotype = properties.get('stereotype')
+        
+        extendedProperties = detail.find('extendedProperties')
+        if extendedProperties.get('runstate') is not None:
+            runstate = extendedProperties.get('runstate')
+            vars = runstate.split('@ENDVAR;')
+            for var in vars:
+                if var != '':
+                    variable,value=(var.split(';')[1:3])
+                    attr = UMLAttribute(self)
+                    attr.name = variable.split('=')[1]
+                    attr.value = value.split('=')[1]
+                    self.attributes.append( attr )
+                    
 
 class UMLAssociation(object):
     def __init__(self, package, source, dest):
@@ -184,26 +238,34 @@ class UMLAssociation(object):
         self.dest = dest
         source.associations_from.append(self)
         dest.associations_to.append(self)
+        self.source_multiplicity = ['0','0']
+        self.dest_multiplicity = ['0','0']
+        self.association_type = None
+        
         
     def parse(self, element, source_element, dest_element):
         self.source_name = self.dest.name.lower()
         self.dest_name = self.source.name.lower()
         
-        source_lower = source_element.find('lowerValue').get('value')
-        if source_lower == '-1':
-            source_lower = '*'
-        source_upper = source_element.find('upperValue').get('value')
-        if source_upper == '-1':
-            source_upper = '*'
-        self.source_multiplicity = (source_lower, source_upper)
+        source_lower = source_element.find('lowerValue')
+        if source_lower is not None:
+            source_lower = source_lower.get('value')
+            if source_lower == '-1':
+                source_lower = '*'
+            source_upper = source_element.find('upperValue').get('value')
+            if source_upper == '-1':
+                source_upper = '*'
+            self.source_multiplicity = (source_lower, source_upper)
 
-        dest_lower = dest_element.find('lowerValue').get('value')
-        if dest_lower == '-1':
-            dest_lower = '*'
-        dest_upper = dest_element.find('upperValue').get('value')
-        if dest_upper == '-1':
-            dest_upper = '*'
-        self.dest_multiplicity = (dest_lower, dest_upper)
+        dest_lower = dest_element.find('lowerValue')
+        if dest_lower is not None:
+            dest_lower = dest_lower.get('value')
+            if dest_lower == '-1':
+                dest_lower = '*'
+            dest_upper = dest_element.find('upperValue').get('value')
+            if dest_upper == '-1':
+                dest_upper = '*'
+            self.dest_multiplicity = (dest_lower, dest_upper)
         
         #print( '{}:{} to {}:{}'.format(self.source.name, self.source_multiplicity, self.dest.name, self.dest_multiplicity))
         
@@ -265,7 +327,6 @@ class UMLClass(object):
 class UMLAttribute(object):
     def __init__(self, parent=None):
         self.parent = parent
-        self.association = None
         self.is_unique = False
         self.stereotype = None
 
