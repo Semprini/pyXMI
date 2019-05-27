@@ -67,6 +67,9 @@ def serialize_instance(instance):
                 ret[assoc.source.name] = [serialize_instance(assoc.source),]
             else:
                 ret[assoc.source.name].append(serialize_instance(assoc.source))
+        else:
+                ret[assoc.source.name] = serialize_instance(assoc.source)
+        
     return ret
 
 
