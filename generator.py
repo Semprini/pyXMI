@@ -61,14 +61,23 @@ def serialize_instance(instance):
     for attr in instance.attributes:
         ret[attr.name] = attr.value
     
-    for assoc in instance.associations_to:
-        if assoc.source_multiplicity[1] == '*':
-            if assoc.source.name not in ret.keys():
-                ret[assoc.source.name] = [serialize_instance(assoc.source),]
+    #for assoc in instance.associations_to:
+    #    if assoc.source_multiplicity[1] == '*':
+    #        if assoc.source.name not in ret.keys():
+    #            ret[assoc.source.name] = [serialize_instance(assoc.source),]
+    #        else:
+    #            ret[assoc.source.name].append(serialize_instance(assoc.source))
+    #    else:
+    #            ret[assoc.source.name] = serialize_instance(assoc.source)
+
+    for assoc in instance.associations_from:
+        if assoc.dest_multiplicity[1] == '*':
+            if assoc.dest.name not in ret.keys():
+                ret[assoc.dest.name] = [serialize_instance(assoc.dest),]
             else:
-                ret[assoc.source.name].append(serialize_instance(assoc.source))
+                ret[assoc.dest.name].append(serialize_instance(assoc.dest))
         else:
-                ret[assoc.source.name] = serialize_instance(assoc.source)
+                ret[assoc.dest.name] = serialize_instance(assoc.dest)
         
     return ret
 
