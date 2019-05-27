@@ -279,9 +279,9 @@ class UMLAssociation(object):
             self.association_type = 'OneToOne'
 
         if self.source_multiplicity[1] == '*':
-            self.source_name += 's'
-        if self.dest_multiplicity[1] == '*':
             self.dest_name += 's'
+        if self.dest_multiplicity[1] == '*':
+            self.source_name += 's'
         #print('Assoc in {}: {} to {}: type = {}'.format(self.source.name, self.source_name, self.dest_name, self.association_type) )
 
 
@@ -294,6 +294,7 @@ class UMLClass(object):
         self.supertype = None
         self.supertype_id = None
         self.stereotype = None
+        self.id_attribute = None
 
 
     def parse(self, element, root):
@@ -353,6 +354,7 @@ class UMLAttribute(object):
         xrefs = detail.find('xrefs')
         if xrefs.get('value') is not None and 'NAME=isID' in xrefs.get('value'):
             self.is_id = True
+            self.parent.id_attribute = self
         else:
             self.is_id = False
             
