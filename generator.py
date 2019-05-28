@@ -16,6 +16,9 @@ def output_model(package):
     for template_definition in settings['templates']:
         template = env.get_template(template_definition['source'])
         filename_template = Template(template_definition['dest'])
+        filter_template = None
+        if 'filter' in template_definition.keys():
+            filter_template = Template(template_definition['filter'])
         
         if template_definition['level'] == 'package':
             filename = os.path.abspath(filename_template.render(package=package))
@@ -28,13 +31,15 @@ def output_model(package):
         
         elif template_definition['level'] == 'class':
             for cls in package.classes:
-                filename = os.path.abspath(filename_template.render(cls=cls))
-                dirname = os.path.dirname(filename)
-                if not os.path.exists(dirname):
-                    os.makedirs(dirname)
-                print("Writing: " + filename)
-                with open(filename, 'w') as fh:
-                    fh.write( template.render(cls=cls) )
+            
+                if filter_template is None or filter_template.render(cls=cls)=="True":
+                    filename = os.path.abspath(filename_template.render(cls=cls))
+                    dirname = os.path.dirname(filename)
+                    if not os.path.exists(dirname):
+                        os.makedirs(dirname)
+                    print("Writing: " + filename)
+                    with open(filename, 'w') as fh:
+                        fh.write( template.render(cls=cls) )
 
     for child in package.children:
         output_model(child)
