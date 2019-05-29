@@ -1,5 +1,5 @@
-#Sparx DB
-.ldb
+# Sparx DB
+*.ldb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
