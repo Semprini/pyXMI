@@ -111,12 +111,4 @@ def parse(recipie_path):
     output_model(model_package, recipie_path)
     output_test_cases(test_cases)
 
-
-if __name__ == '__main__':
-    if len(sys.argv) == 1:
-        recipie_path = 'test_recipie'
-    else:
-        recipie_path = str(sys.argv[1])
-
-    parse(recipie_path)
     
