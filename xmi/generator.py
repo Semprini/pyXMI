@@ -7,7 +7,7 @@ import yaml
 from lxml import etree
 from jinja2 import Template, Environment, FileSystemLoader
 
-from pyxmi.uml.parse import ns, parse_uml, UMLPackage, UMLClass, UMLAttribute
+from xmi.uml.parse import ns, parse_uml, UMLPackage, UMLClass, UMLAttribute
 
 settings = None
 
