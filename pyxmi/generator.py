@@ -2,6 +2,7 @@
 import sys
 import os
 import json
+import yaml
 
 from lxml import etree
 from jinja2 import Template, Environment, FileSystemLoader
@@ -90,11 +91,11 @@ def serialize_instance(instance):
 def parse(recipie_path):
     global settings
     
-    config_filename = recipie_path+"/config.json"
+    config_filename = recipie_path+"/config.yaml"
     os.environ.setdefault("PYXMI_SETTINGS_MODULE", config_filename )
 
     with open(config_filename, 'r') as config_file:
-        settings=json.loads(config_file.read())
+        settings=yaml.load(config_file.read(), Loader=yaml.SafeLoader)
 
     tree = etree.parse(settings['source'])
     model=tree.find('uml:Model',ns)

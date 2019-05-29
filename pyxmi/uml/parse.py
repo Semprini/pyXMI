@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import yaml
 
 ns={
 	'uml':'http://schema.omg.org/spec/UML/2.1',
@@ -19,7 +20,7 @@ def parse_uml(element, root):
     test_package = None
     
     with open(os.environ.get('PYXMI_SETTINGS_MODULE'), 'r') as config_file:
-        settings=json.loads(config_file.read())
+        settings=yaml.load(config_file.read(), Loader=yaml.SafeLoader)
 
 
     # Find the element that is the root for models

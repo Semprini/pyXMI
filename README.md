@@ -7,9 +7,9 @@ Can be used to parse XMI file into classes which are passed to jinja2 templates 
 To generate code a recipie folder is provided:
 > python generate.py <recipie folder>
 
-Or once installed via setup.py:
+Or once installed into site-packages:
 > python
 from pyxmi import generator
 generator.parse('<folder>')
 
-The recipie folder must have a config.json file which specifies templates and output.
+The recipie folder must have a config.yaml file which specifies templates and output.
