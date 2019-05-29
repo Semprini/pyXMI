@@ -1,5 +1,6 @@
 import os
 import json
+import re
 
 ns={
 	'uml':'http://schema.omg.org/spec/UML/2.1',
@@ -21,12 +22,14 @@ def parse_uml(element, root):
         settings=json.loads(config_file.read())
 
 
+    # Find the element that is the root for models
     print( "Parsing models" )
     model_element=element.xpath("//packagedElement[@name='%s']"%settings['model_package'], namespaces=ns)
     if len(model_element) == 0:
         raise ValueError("Model packaged element not found. Settings has:{}".format(settings['model_package']))
     model_element=model_element[0]
 
+    # Create our root model UMLPackage and parse in 3 passes
     e_type = model_element.get('{%s}type'%ns['xmi'])
     if e_type == 'uml:Package':
         model_package = UMLPackage()
@@ -36,23 +39,29 @@ def parse_uml(element, root):
     else:
         raise ValueError('Error - Non uml:Package element provided to packagedElement parser')
 
+    # Find the element that is the root for test data
     print( "Parsing test cases" )
     test_element=element.xpath("//packagedElement[@name='%s']"%settings['test_package'], namespaces=ns)
     if len(test_element) == 0:
         raise ValueError("Test packaged element not found. Settings has:{}".format(settings['test_package']))
     test_element=test_element[0]
 
+    # Create our root test data UMLPackage and parse in 2 passes. Does not support inheritance
     e_type = test_element.get('{%s}type'%ns['xmi'])
     if e_type == 'uml:Package':
         test_package = UMLPackage()
         test_package.parse(test_element, root)
         test_package.parse_associations()
 
+    # With our test package parsed, we must return a list of instances instead of hierarchy of packages
     test_cases = parse_test_cases(test_package)
     return model_package, test_cases
 
 
 def parse_test_cases(package):
+    """ Looks through package hierarchy for instances with request or response stereotype
+    and returns list of instances.
+    """
     test_cases = []
     
     for instance in package.instances:
@@ -92,7 +101,7 @@ class UMLPackage(object):
 
         # Package path is hierarchical. Add the current path onto it's parent
         if self.parent is None:
-            self.path = '/' + self.root_package.name + '/'
+            self.path = '/'
         else:
             self.path = self.parent.path + self.name + '/'
 
@@ -172,7 +181,7 @@ class UMLPackage(object):
 
 
     def parse_inheritance(self):
-        
+        """ Looks for classes with a supertype and finds the correct object """
         for cls in self.classes:
             if cls.supertype_id is not None:
                 cls.supertype = self.root_package.find_by_id(cls.supertype_id)
@@ -218,6 +227,8 @@ class UMLInstance(object):
         properties = detail.find('properties')
         self.stereotype = properties.get('stereotype')
         
+        # Create attributes for each item found in the runstate
+        # TODO: Change this to using an re
         extendedProperties = detail.find('extendedProperties')
         if extendedProperties.get('runstate') is not None:
             runstate = extendedProperties.get('runstate')
@@ -244,9 +255,12 @@ class UMLAssociation(object):
         
         
     def parse(self, element, source_element, dest_element):
+        # Use opposing ends class name as attribute name for association
+        # TODO: Use name from UML if provided
         self.source_name = self.dest.name.lower()
         self.dest_name = self.source.name.lower()
         
+        # Extract multiplicity for source
         source_lower = source_element.find('lowerValue')
         if source_lower is not None:
             source_lower = source_lower.get('value')
@@ -257,6 +271,7 @@ class UMLAssociation(object):
                 source_upper = '*'
             self.source_multiplicity = (source_lower, source_upper)
 
+        # Extract multiplicity for dest
         dest_lower = dest_element.find('lowerValue')
         if dest_lower is not None:
             dest_lower = dest_lower.get('value')
@@ -269,6 +284,7 @@ class UMLAssociation(object):
         
         #print( '{}:{} to {}:{}'.format(self.source.name, self.source_multiplicity, self.dest.name, self.dest_multiplicity))
         
+        # Use multiplicities to calculate the type of association
         if self.source_multiplicity[1] == '*' and self.dest_multiplicity[1] in ('0','1'):
             self.association_type = 'ManyToOne'
         elif self.dest_multiplicity[1] == '*' and self.source_multiplicity[1] in ('0','1'):
@@ -278,6 +294,8 @@ class UMLAssociation(object):
         elif self.dest_multiplicity[1] in ('0','1') and self.source_multiplicity[1] in ('0','1'):
             self.association_type = 'OneToOne'
 
+        # If it's an association to or from a multiple then pluralize the name
+        # TODO: Allow pluralized name to be specified in UML
         if self.source_multiplicity[1] == '*':
             self.dest_name += 's'
         if self.dest_multiplicity[1] == '*':
@@ -293,7 +311,7 @@ class UMLClass(object):
         self.package = package
         self.supertype = None
         self.supertype_id = None
-        self.stereotype = None
+        self.stereotypes = []
         self.id_attribute = None
 
 
@@ -305,24 +323,31 @@ class UMLClass(object):
         else:
             self.is_abstract = False
 
+        # If the class is inherited from a superclass then get the ID. The actual object will be found in a separate pass as it may not have been parsed yet
         supertype_element = element.find('generalization')
         if supertype_element is not None:
             self.supertype_id = supertype_element.get('general')
 
+        # Loop through class elements children for attributes.
         for child in element:    
             e_type = child.get('{%s}type'%ns['xmi'])
 
             if e_type == 'uml:Property':
+                # Associations will be done in a separate pass
                 if child.get('association') is None and child.get('name') is not None:
                     cls = UMLAttribute(self)
                     cls.parse(child, root)
                     self.attributes.append( cls )
 
-        #Detail is sparx sprecific
+        # Detail is sparx sprecific
         #TODO: Put modelling tool in settings and use tool specific parser here
         detail = root.xpath("//element[@xmi:idref='%s']"%self.id, namespaces=ns)[0]
-        properties = detail.find('properties')
-        self.stereotype = properties.get('stereotype')
+
+        # Get stereotypes, when multiple are provided only the first is found in the stereotype tag but all are found in xrefs
+        xrefs = detail.find('xrefs')
+        value = xrefs.get('value')
+        if value is not None:
+            self.stereotypes = re.findall('@STEREO;Name=(.*?);', value)
 
 
 class UMLAttribute(object):

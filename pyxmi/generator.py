@@ -6,12 +6,12 @@ import json
 from lxml import etree
 from jinja2 import Template, Environment, FileSystemLoader
 
-from uml.parse import ns, parse_uml, UMLPackage, UMLClass, UMLAttribute
+from pyxmi.uml.parse import ns, parse_uml, UMLPackage, UMLClass, UMLAttribute
 
 settings = None
 
 
-def output_model(package):
+def output_model(package, recipie_path):
     env = Environment(loader=FileSystemLoader(recipie_path))
     for template_definition in settings['templates']:
         template = env.get_template(template_definition['source'])
@@ -42,7 +42,7 @@ def output_model(package):
                         fh.write( template.render(cls=cls) )
 
     for child in package.children:
-        output_model(child)
+        output_model(child, recipie_path)
 
 
 def output_test_cases(test_cases):
@@ -108,7 +108,7 @@ def parse(recipie_path):
 
     model_package, test_cases = parse_uml(root_package, tree)
     print("Base Model Package: "+model_package.name)
-    output_model(model_package)
+    output_model(model_package, recipie_path)
     output_test_cases(test_cases)
 
 
