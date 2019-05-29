@@ -1,6 +1,6 @@
 import os
 
-from distutils.core import setup
+from setuptools import setup
 
 def find_packages(srcdir):
     package_list = []
@@ -15,5 +15,9 @@ pyxmi_packages = find_packages('.')
 
 setup(name='pyxmi',
     version='0.1-alpha',
-    packages=pyxmi_packages
+    packages=pyxmi_packages,
+    install_requires=[
+        "lxml",
+        "jinja2",
+    ],
 )
