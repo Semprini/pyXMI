@@ -185,6 +185,9 @@ class UMLPackage(object):
         for cls in self.classes:
             if cls.supertype_id is not None:
                 cls.supertype = self.root_package.find_by_id(cls.supertype_id)
+                
+                if cls.id_attribute is None:
+                    cls.id_attribute = cls.supertype.id_attribute
                 #print( "set supertpye of {} to {}".format(cls.name, cls.supertype.name) )
         
         for child in self.children:
