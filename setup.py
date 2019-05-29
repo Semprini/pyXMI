@@ -19,5 +19,6 @@ setup(name='pyxmi',
     install_requires=[
         "lxml",
         "jinja2",
+        "pyyaml",
     ],
 )
