@@ -84,6 +84,7 @@ class UMLPackage(object):
         self.children = []
         self.instances = []
         self.parent = parent
+        self.stereotype = None
         
         if self.parent is None:
             self.root_package=self
@@ -105,6 +106,12 @@ class UMLPackage(object):
             self.path = '/'
         else:
             self.path = self.parent.path + self.name + '/'
+
+        #Detail is sparx sprecific
+        #TODO: Put modelling tool in settings and use tool specific parser here
+        detail = root.xpath("//element[@xmi:idref='%s']"%self.id, namespaces=ns)[0]
+        properties = detail.find('properties')
+        self.stereotype = properties.get('stereotype')
 
         # Loop through all child elements and get classes and sub packages
         for child in element:
