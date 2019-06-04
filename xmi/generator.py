@@ -22,13 +22,14 @@ def output_model(package, recipie_path):
             filter_template = Template(template_definition['filter'])
         
         if template_definition['level'] == 'package':
-            filename = os.path.abspath(filename_template.render(package=package))
-            dirname = os.path.dirname(filename)
-            if not os.path.exists(dirname):
-                os.makedirs(dirname)
-            print("Writing: " + filename)
-            with open(filename, 'w') as fh:
-                fh.write( template.render(package=package) )
+            if filter_template is None or filter_template.render(package=package)=="True":
+                filename = os.path.abspath(filename_template.render(package=package))
+                dirname = os.path.dirname(filename)
+                if not os.path.exists(dirname):
+                    os.makedirs(dirname)
+                print("Writing: " + filename)
+                with open(filename, 'w') as fh:
+                    fh.write( template.render(package=package) )
         
         elif template_definition['level'] == 'class':
             for cls in package.classes:
