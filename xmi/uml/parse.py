@@ -307,9 +307,14 @@ class UMLAssociation(object):
 
         # If it's an association to or from a multiple then pluralize the name
         # TODO: Allow pluralized name to be specified in UML
-        if self.source_multiplicity[1] == '*':
+        if dest_element.get('name') is not None:
+            self.dest_name = dest_element.get('name')
+        elif self.source_multiplicity[1] == '*':
             self.dest_name += 's'
-        if self.dest_multiplicity[1] == '*':
+            
+        if source_element.get('name') is not None:
+            self.source_name = source_element.get('name')
+        elif self.dest_multiplicity[1] == '*':
             self.source_name += 's'
         #print('Assoc in {}: {} to {}: type = {}'.format(self.source.name, self.source_name, self.dest_name, self.association_type) )
 
