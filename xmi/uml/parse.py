@@ -85,11 +85,13 @@ class UMLPackage(object):
         self.instances = []
         self.parent = parent
         self.stereotype = None
+        self.inherited_stereotypes = []
         
         if self.parent is None:
             self.root_package=self
         else:
-            self.root_package=self.parent.root_package
+            self.root_package=parent.root_package
+            self.inherited_stereotypes += parent.inherited_stereotypes
 
 
     def parse(self, element, root):
@@ -112,6 +114,8 @@ class UMLPackage(object):
         detail = root.xpath("//element[@xmi:idref='%s']"%self.id, namespaces=ns)[0]
         properties = detail.find('properties')
         self.stereotype = properties.get('stereotype')
+        if self.stereotype is not None:
+            self.inherited_stereotypes.append([self.stereotype,self])
 
         # Loop through all child elements and get classes and sub packages
         for child in element:
@@ -264,12 +268,13 @@ class UMLAssociation(object):
         self.dest_multiplicity = ['0','0']
         self.association_type = None
         
+    def source_nameCamel(self):
+        return re.sub(r'_([a-z])', lambda x: x.group(1).upper(), self.source_name)
+
+    def dest_nameCamel(self):
+        return re.sub(r'_([a-z])', lambda x: x.group(1).upper(), self.dest_name)
         
     def parse(self, element, source_element, dest_element):
-        # Use opposing ends class name as attribute name for association
-        # TODO: Use name from UML if provided
-        self.source_name = self.dest.name.lower()
-        self.dest_name = self.source.name.lower()
         
         # Extract multiplicity for source
         source_lower = source_element.find('lowerValue')
@@ -309,13 +314,20 @@ class UMLAssociation(object):
         # TODO: Allow pluralized name to be specified in UML
         if dest_element.get('name') is not None:
             self.dest_name = dest_element.get('name')
-        elif self.source_multiplicity[1] == '*':
-            self.dest_name += 's'
+        else:
+            # Use opposing ends class name as attribute name for association
+            self.dest_name = self.source.name.lower()
+            if self.source_multiplicity[1] == '*':
+                self.dest_name += 's'
             
         if source_element.get('name') is not None:
             self.source_name = source_element.get('name')
-        elif self.dest_multiplicity[1] == '*':
-            self.source_name += 's'
+        else:
+            # Use opposing ends class name as attribute name for association
+            self.source_name = self.dest.name.lower()
+            if self.dest_multiplicity[1] == '*':
+                self.source_name += 's'
+                
         #print('Assoc in {}: {} to {}: type = {}'.format(self.source.name, self.source_name, self.dest_name, self.association_type) )
 
 
@@ -330,6 +342,10 @@ class UMLClass(object):
         self.is_supertype = False
         self.stereotypes = []
         self.id_attribute = None
+        
+        for inherited_stereotype, inherited_package in package.inherited_stereotypes:
+            if not hasattr(self,inherited_stereotype):
+                setattr(self, inherited_stereotype, inherited_package )
 
 
     def parse(self, element, root):
@@ -372,6 +388,10 @@ class UMLAttribute(object):
         self.parent = parent
         self.is_unique = False
         self.stereotype = None
+
+
+    def nameCamel(self):
+        return re.sub(r'_([a-z])', lambda x: x.group(1).upper(), self.name)
 
 
     def parse(self, element, root):

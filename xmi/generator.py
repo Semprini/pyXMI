@@ -43,6 +43,18 @@ def output_model(package, recipie_path):
                     with open(filename, 'w') as fh:
                         fh.write( template.render(cls=cls) )
 
+        elif template_definition['level'] == 'assocication':
+            for assoc in package.associations:
+            
+                if filter_template is None or filter_template.render(association=assoc)=="True":
+                    filename = os.path.abspath(filename_template.render(association=assoc))
+                    dirname = os.path.dirname(filename)
+                    if not os.path.exists(dirname):
+                        os.makedirs(dirname)
+                    print("Writing: " + filename)
+                    with open(filename, 'w') as fh:
+                        fh.write( template.render(association=assoc) )
+
     for child in package.children:
         output_model(child, recipie_path)
 
