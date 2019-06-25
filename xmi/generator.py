@@ -13,7 +13,7 @@ settings = None
 
 
 def output_model(package, recipie_path):
-    env = Environment(loader=FileSystemLoader(recipie_path))
+    env = Environment(loader=FileSystemLoader(settings['templates_folder']))
     for template_definition in settings['templates']:
         template = env.get_template(template_definition['source'])
         filename_template = Template(template_definition['dest'])

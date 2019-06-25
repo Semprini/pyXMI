@@ -173,7 +173,11 @@ class UMLPackage(object):
                         if assoc.tag == 'memberEnd':
                             assoc_idref = assoc.get('{%s}idref'%ns['xmi'])
                             if assoc_idref[:8] == 'EAID_dst':
-                                assoc_dest_elem = self.root_element.xpath("//ownedAttribute[@xmi:id='%s']"%assoc_idref, namespaces=ns)[0]
+                                try:
+                                    assoc_dest_elem = self.root_element.xpath("//ownedAttribute[@xmi:id='%s']"%assoc_idref, namespaces=ns)[0]
+                                except IndexError as e:
+                                    print("Failed to find member end association destination. Id: {}".format(assoc_idref))
+                                    raise
                                 assoc_dest_type_elem = assoc_dest_elem.find('type')
                                 assoc_dest_id = assoc_dest_type_elem.get('{%s}idref'%ns['xmi'])
                 
