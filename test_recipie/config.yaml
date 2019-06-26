@@ -1,6 +1,7 @@
 model_package: Model
 root_package: Sample
 source: ./test_recipie/test.xmi
+templates_folder: ./test_recipie
 templates:
 - dest: ./build/test_output{{package.path}}{{package.name}}.jdl
   level: package

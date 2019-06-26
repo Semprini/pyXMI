@@ -437,4 +437,6 @@ class UMLAttribute(object):
             for constraint in constraints:
                 if constraint.get('name') == 'unique':
                     self.is_unique = True
+                print("constraint {}".format(constraint))
+                print(constraint.get('name'))
         
