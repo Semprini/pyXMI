@@ -435,8 +435,9 @@ class UMLAttribute(object):
         constraints = detail.find('Constraints')
         if constraints is not None:
             for constraint in constraints:
-                if constraint.get('name') == 'unique':
+                name=constraint.get('name')
+                if name == 'unique':
                     self.is_unique = True
-                print("constraint {}".format(constraint))
-                print(constraint.get('name'))
+                elif name.startswith('length'):
+                    self.length=int(name.split("=")[1])
         
