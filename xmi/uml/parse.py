@@ -83,6 +83,7 @@ class UMLPackage(object):
         self.associations = []
         self.children = []
         self.instances = []
+        self.enumerations = []
         self.parent = parent
         self.stereotype = None
         self.inherited_stereotypes = []
@@ -137,7 +138,13 @@ class UMLPackage(object):
                 ins.parse(child, root)
                 if ins.name is not None:
                     self.instances.append( ins )
-                    
+ 
+            elif e_type == 'uml:Enumeration':
+                ins = UMLEnumeration(self)
+                ins.parse(child, root)
+                if ins.name is not None:
+                    self.enumerations.append( ins )
+  
         print("Parsed package with {} classes & {} instances: {}{}".format( len(self.classes), len(self.instances), self.path, self.name ) )
         
 
@@ -204,7 +211,10 @@ class UMLPackage(object):
                 cls.supertype.is_supertype = True
                 if cls.id_attribute is None:
                     cls.id_attribute = cls.supertype.id_attribute
-                #print( "set supertpye of {} to {}".format(cls.name, cls.supertype.name) )
+        
+            for attr in cls.attributes:
+                if attr.classification_id is not None:
+                    attr.classification = self.root_package.find_by_id(attr.classification_id)
         
         for child in self.children:
             child.parse_inheritance()
@@ -217,6 +227,10 @@ class UMLPackage(object):
         for cls in self.classes:
             if cls.id == id:
                 return cls
+
+        for enum in self.enumerations:
+            if enum.id == id:
+                return enum
 
         for ins in self.instances:
             if ins.id == id:
@@ -334,6 +348,21 @@ class UMLAssociation(object):
                 
         #print('Assoc in {}: {} to {}: type = {}'.format(self.source.name, self.source_name, self.dest_name, self.association_type) )
 
+class UMLEnumeration(object):
+    def __init__(self, package):
+        self.values = []
+        self.package = package
+        
+    def parse(self, element, root):
+        self.name = element.get('name')
+        self.id = element.get('{%s}id'%ns['xmi'])
+
+        # Loop through class elements children for values.
+        for child in element:    
+            e_type = child.get('{%s}type'%ns['xmi'])
+            if e_type == 'uml:EnumerationLiteral':
+                self.values.append(child.get('name'))
+
 
 class UMLClass(object):
     def __init__(self, package):
@@ -392,6 +421,8 @@ class UMLAttribute(object):
         self.parent = parent
         self.is_unique = False
         self.stereotype = None
+        self.classification = None
+        self.classification_id = None
 
 
     def nameCamel(self):
@@ -404,15 +435,19 @@ class UMLAttribute(object):
         self.name = element.get('name')
         self.id = element.get('{%s}id'%ns['xmi'])
         self.visibility = element.get('visibility')
+        type_elem = element.find('type')
+        type_id = type_elem.get('{%s}idref'%ns['xmi'])
+        if type_id[:4]=='EAID':
+            self.classification_id = type_id
         
         #Detail is sparx sprecific
         #TODO: Put modelling tool in settings and use tool specific parser here
         detail = root.xpath("//attribute[@xmi:idref='%s']"%self.id, namespaces=ns)[0]
         properties = detail.find('properties')
         self.type = properties.get('type')
-        if self.type[:4]=='enum':
-            self.dest_type = 'enum'
-        elif properties.get('type') in settings['types'].keys():
+        
+        
+        if properties.get('type') in settings['types'].keys():
             self.dest_type = settings['types'][properties.get('type')]
         else:
             self.dest_type = properties.get('type')

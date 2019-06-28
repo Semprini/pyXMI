@@ -6,9 +6,12 @@ templates:
 - dest: ./build/test_output{{package.path}}{{package.name}}.jdl
   level: package
   source: entities.jdl
-- dest: ./build/test_output{{cls.package.path}}{{cls.name}}.java
+- dest: ./build/test_output/entities{{cls.package.path}}{{cls.name}}.java
   level: class
   source: pojos.java
+- dest: ./build/test_output/enums{{enum.package.path}}{{enum.name}}.java
+  level: enumeration
+  source: enums.java
 test_package: Test
 test_templates:
 - dest: ./build/test_output{{ins.package.path}}/{{ins.stereotype}}.json

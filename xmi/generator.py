@@ -43,6 +43,18 @@ def output_model(package, recipie_path):
                     with open(filename, 'w') as fh:
                         fh.write( template.render(cls=cls) )
 
+        elif template_definition['level'] == 'enumeration':
+            for enum in package.enumerations:
+            
+                if filter_template is None or filter_template.render(enum=enum)=="True":
+                    filename = os.path.abspath(filename_template.render(enum=enum))
+                    dirname = os.path.dirname(filename)
+                    if not os.path.exists(dirname):
+                        os.makedirs(dirname)
+                    print("Writing: " + filename)
+                    with open(filename, 'w') as fh:
+                        fh.write( template.render(enum=enum) )
+                        
         elif template_definition['level'] == 'assocication':
             for assoc in package.associations:
             
