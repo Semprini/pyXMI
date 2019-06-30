@@ -16,7 +16,6 @@ settings = None
 
 def output_model(package, recipie_path):
     env = Environment(loader=FileSystemLoader(settings['templates_folder']))
-    print("Generating model output")
     for template_definition in settings['templates']:
         template = env.get_template(template_definition['source'])
         filename_template = Template(template_definition['dest'])
@@ -146,6 +145,7 @@ def parse(recipie_path):
             print( "    {}".format(error) )
     
     
+    print("Generating model output")
     output_model(model_package, recipie_path)
     output_test_cases(test_cases)
 
