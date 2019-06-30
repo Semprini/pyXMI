@@ -11,6 +11,46 @@ from xmi.uml.parse import ns, parse_uml, UMLPackage, UMLClass, UMLAttribute
 
 settings = None
 
+class ClassValidationError(object):
+    def __init__(self, package, cls, error):
+        self.package = package
+        self.error = error
+        self.cls = cls
+        
+    def __repr__(self):
+        return "{}:{}:{}".format(self.package.name, self.cls.name, self.error)
+
+class AttributeValidationError(object):
+    def __init__(self, package, cls, attr, error):
+        self.package = package
+        self.error = error
+        self.cls = cls
+        self.attr = attr
+        
+    def __repr__(self):
+        return "{}:{}:{}:{}".format(self.package.name, self.cls.name, self.attr.name, self.error)
+
+def validate_primary_keys(package):
+    errors = []
+    
+    for cls in package.classes:
+        if cls.id_attribute == None:
+            if cls.supertype == None:
+                errors.append( ClassValidationError(package,cls,"no primary key") )
+        elif cls.supertype != None:
+            if cls.supertype.id_attribute != None:
+                errors.append( ClassValidationError(package,cls,"primary key in both class and supertype") )
+
+        for attr in cls.attributes:
+            if attr.stereotype == "auto" and attr.type != "int":
+                errors.append( AttributeValidationError(package,cls,attr,"auto increment field must be int") )
+            
+    for child in package.children:
+        errors += validate_primary_keys(child)
+        
+    return errors
+
+
 def validate(recipie_path):
     global settings
     
@@ -36,5 +76,7 @@ def validate(recipie_path):
     # Does each object have a primary key
     # Do objects with primary keys have a parent class which also has a primary key
     # Are all auto increment fields int
+    print(validate_primary_keys(model_package))
+    
     # Does each class have a domain
     # Are there unexpected attribute types
