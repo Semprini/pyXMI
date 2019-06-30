@@ -138,6 +138,7 @@ def parse(recipie_path):
     model_package, test_cases = parse_uml(root_package, tree)
     print("Base Model Package: "+model_package.name)
     
+    print("Validating parsed model")
     errors = validate_package(model_package)
     if len(errors) > 0:
         print("Validation Errors:")
