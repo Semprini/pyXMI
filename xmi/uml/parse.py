@@ -145,7 +145,7 @@ class UMLPackage(object):
                 if ins.name is not None:
                     self.enumerations.append( ins )
   
-        print("Parsed package with {} classes & {} instances: {}{}".format( len(self.classes), len(self.instances), self.path, self.name ) )
+        #print("Parsed package with {} classes & {} instances: {}{}".format( len(self.classes), len(self.instances), self.path, self.name ) )
         
 
     def parse_associations(self):

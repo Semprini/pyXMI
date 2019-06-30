@@ -9,11 +9,14 @@ from jinja2 import Template, Environment, FileSystemLoader
 
 from xmi.uml.parse import ns, parse_uml, UMLPackage, UMLClass, UMLAttribute
 
+from xmi.validator import validate_package
+
 settings = None
 
 
 def output_model(package, recipie_path):
     env = Environment(loader=FileSystemLoader(settings['templates_folder']))
+    print("Generating model output")
     for template_definition in settings['templates']:
         template = env.get_template(template_definition['source'])
         filename_template = Template(template_definition['dest'])
@@ -27,7 +30,7 @@ def output_model(package, recipie_path):
                 dirname = os.path.dirname(filename)
                 if not os.path.exists(dirname):
                     os.makedirs(dirname)
-                print("Writing: " + filename)
+                #print("Writing: " + filename)
                 with open(filename, 'w') as fh:
                     fh.write( template.render(package=package) )
         
@@ -39,7 +42,7 @@ def output_model(package, recipie_path):
                     dirname = os.path.dirname(filename)
                     if not os.path.exists(dirname):
                         os.makedirs(dirname)
-                    print("Writing: " + filename)
+                    #print("Writing: " + filename)
                     with open(filename, 'w') as fh:
                         fh.write( template.render(cls=cls) )
 
@@ -51,7 +54,7 @@ def output_model(package, recipie_path):
                     dirname = os.path.dirname(filename)
                     if not os.path.exists(dirname):
                         os.makedirs(dirname)
-                    print("Writing: " + filename)
+                    #print("Writing: " + filename)
                     with open(filename, 'w') as fh:
                         fh.write( template.render(enum=enum) )
                         
@@ -63,7 +66,7 @@ def output_model(package, recipie_path):
                     dirname = os.path.dirname(filename)
                     if not os.path.exists(dirname):
                         os.makedirs(dirname)
-                    print("Writing: " + filename)
+                    #print("Writing: " + filename)
                     with open(filename, 'w') as fh:
                         fh.write( template.render(association=assoc) )
 
@@ -72,6 +75,7 @@ def output_model(package, recipie_path):
 
 
 def output_test_cases(test_cases):
+    print("Generating test case output")
     for case in test_cases:
         serialised = json.dumps(serialize_instance(case), indent=2)
         
@@ -81,7 +85,7 @@ def output_test_cases(test_cases):
             dirname = os.path.dirname(filename)
             if not os.path.exists(dirname):
                 os.makedirs(dirname)
-            print("Writing: " + filename)
+            #print("Writing: " + filename)
             with open(filename, 'w') as fh:
                 fh.write( serialised )
 
@@ -134,7 +138,16 @@ def parse(recipie_path):
 
     model_package, test_cases = parse_uml(root_package, tree)
     print("Base Model Package: "+model_package.name)
+    
+    errors = validate_package(model_package)
+    if len(errors) > 0:
+        print("Validation Errors:")
+        for error in errors:
+            print( "    {}".format(error) )
+    
+    
     output_model(model_package, recipie_path)
     output_test_cases(test_cases)
 
+    
     
