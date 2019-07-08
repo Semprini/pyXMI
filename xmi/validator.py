@@ -37,8 +37,8 @@ def validate_package(package):
     errors = []
     
     for cls in package.classes:
-        if cls.id_attribute == None:
-            if cls.supertype == None:
+        if cls.id_attribute == None and cls.is_abstract == False:
+            if cls.supertype == None or cls.supertype.id_attribute == None:
                 errors.append( ClassValidationError(package,cls,"no primary key") )
         elif cls.supertype != None:
             if cls.supertype.id_attribute != None and cls.id_attribute != cls.supertype.id_attribute:
