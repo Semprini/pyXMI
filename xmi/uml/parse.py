@@ -84,6 +84,8 @@ class UMLPackage(object):
         self.children = []
         self.instances = []
         self.enumerations = []
+        self.actors = []
+        self.use_cases = []
         self.parent = parent
         self.stereotype = None
         self.inherited_stereotypes = []
@@ -144,6 +146,18 @@ class UMLPackage(object):
                 ins.parse(child, root)
                 if ins.name is not None:
                     self.enumerations.append( ins )
+
+            elif e_type == 'uml:Actor':
+                act = UMLActor(self)
+                act.parse(child, root)
+                if act.name is not None:
+                    self.actors.append( act )
+
+            elif e_type == 'uml:UseCase':
+                uc = UMLUseCase(self)
+                uc.parse(child, root)
+                if uc.name is not None:
+                    self.use_cases.append( uc )
   
         #print("Parsed package with {} classes & {} instances: {}{}".format( len(self.classes), len(self.instances), self.path, self.name ) )
         
@@ -235,6 +249,14 @@ class UMLPackage(object):
         for ins in self.instances:
             if ins.id == id:
                 return ins
+
+        for act in self.actors:
+            if act.id == id:
+                return act
+
+        for uc in self.use_cases:
+            if uc.id == id:
+                return uc
 
         for child in self.children:
             res = child.find_by_id(id)
@@ -363,6 +385,27 @@ class UMLEnumeration(object):
             if e_type == 'uml:EnumerationLiteral':
                 self.values.append(child.get('name'))
 
+class UMLActor(object):
+    def __init__(self, package):
+        self.package = package
+        self.associations_from = []
+        self.associations_to = []
+        
+    def parse(self, element, root):
+        self.name = element.get('name')
+        self.id = element.get('{%s}id'%ns['xmi'])
+
+
+class UMLUseCase(object):
+    def __init__(self, package):
+        self.package = package
+        self.associations_from = []
+        self.associations_to = []
+        
+    def parse(self, element, root):
+        self.name = element.get('name')
+        self.id = element.get('{%s}id'%ns['xmi'])
+
 
 class UMLClass(object):
     def __init__(self, package):
@@ -437,8 +480,8 @@ class UMLAttribute(object):
         self.visibility = element.get('visibility')
         type_elem = element.find('type')
         type_id = type_elem.get('{%s}idref'%ns['xmi'])
-        if type_id[:4]=='EAID':
-            self.classification_id = type_id
+        if type_id is not None and type_id[:4]=='EAID':
+                self.classification_id = type_id
         
         #Detail is sparx sprecific
         #TODO: Put modelling tool in settings and use tool specific parser here
