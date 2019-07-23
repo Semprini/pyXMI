@@ -489,11 +489,10 @@ class UMLAttribute(object):
         properties = detail.find('properties')
         self.type = properties.get('type')
         
-        
-        if properties.get('type') in settings['types'].keys():
-            self.dest_type = settings['types'][properties.get('type')]
+        if self.type in settings['types'].keys():
+            self.dest_type = settings['types'][self.type]
         else:
-            self.dest_type = properties.get('type')
+            self.dest_type = self.type
             
         xrefs = detail.find('xrefs')
         if xrefs.get('value') is not None and 'NAME=isID' in xrefs.get('value'):

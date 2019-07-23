@@ -33,7 +33,7 @@ class AttributeValidationError(object):
         return "Attribute error: {}{}.{} | {}".format(self.package.path, self.cls.name, self.attr.name, self.error)
 
 
-def validate_package(package):
+def validate_package(package,settings):
     errors = []
     
     for cls in package.classes:
@@ -47,9 +47,13 @@ def validate_package(package):
         for attr in cls.attributes:
             if attr.stereotype == "auto" and attr.type != "int":
                 errors.append( AttributeValidationError(package,cls,attr,"auto increment field must be int") )
+
+            if attr.classification == None and attr.type not in settings['types'].keys():
+                errors.append("unknown type: {}->{}={}".format(attr.parent.name,attr.name,attr.type))
+
             
     for child in package.children:
-        errors += validate_package(child)
+        errors += validate_package(child,settings)
         
     return errors
 
@@ -79,7 +83,7 @@ def validate(recipie_path):
     # Does each object have a primary key
     # Do objects with primary keys have a parent class which also has a primary key
     # Are all auto increment fields int
-    print(validate_package(model_package))
+    print(validate_package(model_package,settings))
     
     # Does each class have a domain
     # Are there unexpected attribute types

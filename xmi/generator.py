@@ -126,6 +126,18 @@ def parse(recipie_path):
         settings=yaml.load(config_file.read(), Loader=yaml.SafeLoader)
 
     tree = etree.parse(settings['source'])
+    
+    # Check that we have the right XMI version
+    root = tree.getroot()
+    if root == None:
+        raise ValueError('Not a valid XMI')
+    version = root.get('{%s}version'%ns['xmi'])
+    if version == None:
+        raise ValueError('No XMI version specified')
+    elif version != "2.1":
+        raise ValueError('XMI version must be 2.1')
+        
+    
     model=tree.find('uml:Model',ns)
     root_package=model.xpath("//packagedElement[@name='%s']"%settings['root_package'], namespaces=ns)
     if len(root_package) == 0:
@@ -139,7 +151,7 @@ def parse(recipie_path):
     print("Base Model Package: "+model_package.name)
     
     print("Validating parsed model")
-    errors = validate_package(model_package)
+    errors = validate_package(model_package,settings)
     if len(errors) > 0:
         print("Validation Errors:")
         for error in errors:
