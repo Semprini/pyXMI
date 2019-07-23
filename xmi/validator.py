@@ -37,19 +37,22 @@ def validate_package(package,settings):
     errors = []
     
     for cls in package.classes:
+        if not hasattr(cls,'domain'):
+            errors.append( ClassValidationError(package,cls,"Class does not belong to a domain") )
+    
         if cls.id_attribute == None and cls.is_abstract == False:
             if cls.supertype == None or cls.supertype.id_attribute == None:
                 errors.append( ClassValidationError(package,cls,"no primary key") )
         elif cls.supertype != None:
             if cls.supertype.id_attribute != None and cls.id_attribute != cls.supertype.id_attribute:
-                errors.append( ClassValidationError(package,cls,"primary key in both class and supertype") )
+                errors.append( ClassValidationError(package,cls,"To allow polymorphism the primary key must be defined in only the supertype") )
 
         for attr in cls.attributes:
             if attr.stereotype == "auto" and attr.type != "int":
                 errors.append( AttributeValidationError(package,cls,attr,"auto increment field must be int") )
 
             if attr.classification == None and attr.type not in settings['types'].keys():
-                errors.append("unknown type: {}->{}={}".format(attr.parent.name,attr.name,attr.type))
+                errors.append( AttributeValidationError(package,cls,attr,"unknown type: {}".format(attr.type)) )
 
             
     for child in package.children:
