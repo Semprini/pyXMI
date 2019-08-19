@@ -47,13 +47,21 @@ def validate_package(package,settings):
             if cls.supertype.id_attribute != None and cls.id_attribute != cls.supertype.id_attribute:
                 errors.append( ClassValidationError(package,cls,"To allow polymorphism the primary key must be defined in only the supertype") )
 
+        has_id = False
         for attr in cls.attributes:
             if attr.stereotype == "auto" and attr.type != "int":
                 errors.append( AttributeValidationError(package,cls,attr,"auto increment field must be int") )
 
             if attr.classification == None and attr.type not in settings['types'].keys():
                 errors.append( AttributeValidationError(package,cls,attr,"unknown type: {}".format(attr.type)) )
-
+                
+            if attr.is_id == True:
+                if has_id == True:
+                    errors.append( AttributeValidationError(package,cls,attr,"multiple ID attributes detected") )
+                has_id = True
+                
+            if attr.name == 'is_deleted':
+                errors.append( AttributeValidationError(package,cls,attr,"is_deleted is a reserved attribute name") )
             
     for child in package.children:
         errors += validate_package(child,settings)
