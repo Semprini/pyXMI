@@ -136,9 +136,10 @@ def parse(recipie_path):
         raise ValueError('No XMI version specified')
     elif version != "2.1":
         raise ValueError('XMI version must be 2.1')
-        
-    
     model=tree.find('uml:Model',ns)
+    if model == None:
+        raise ValueError("Could not find model, UML version must be 2.1")
+        
     root_package=model.xpath("//packagedElement[@name='%s']"%settings['root_package'], namespaces=ns)
     if len(root_package) == 0:
         print("Root packaged element not found. Settings has:{}".format(settings['root_package']))
