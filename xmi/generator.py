@@ -9,7 +9,7 @@ from jinja2 import Template, Environment, FileSystemLoader
 
 from xmi.uml.parse import ns, parse_uml, UMLPackage, UMLClass, UMLAttribute
 
-from xmi.validator import validate_package
+from xmi.validator import validate_package, validate_test_cases
 
 settings = None
 
@@ -153,10 +153,18 @@ def parse(recipie_path):
     
     print("Validating parsed model")
     errors = validate_package(model_package,settings)
+
+    print("Validating test data")
+    for case in test_cases:
+        errors += validate_test_cases(case,settings)
+
+
     if len(errors) > 0:
         print("Validation Errors:")
         for error in errors:
             print( "    {}".format(error) )
+
+
     
     
     print("Generating model output")

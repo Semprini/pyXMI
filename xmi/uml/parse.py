@@ -53,11 +53,21 @@ def parse_uml(element, root):
         test_package = UMLPackage()
         test_package.parse(test_element, root)
         test_package.parse_associations()
+        parse_test_case_inheritance(test_package, model_package)
 
     # With our test package parsed, we must return a list of instances instead of hierarchy of packages
     test_cases = parse_test_cases(test_package)
     return model_package, test_cases
 
+
+def parse_test_case_inheritance(package,model_package):
+    for ins in package.instances:
+        ins.parent = model_package.find_by_id(ins.classifier_id)
+            
+    for child in package.children:
+        parse_test_case_inheritance(child, model_package)
+    
+    
 
 def parse_test_cases(package):
     """ Looks through package hierarchy for instances with request or response stereotype
@@ -229,7 +239,7 @@ class UMLPackage(object):
             for attr in cls.attributes:
                 if attr.classification_id is not None:
                     attr.classification = self.root_package.find_by_id(attr.classification_id)
-        
+
         for child in self.children:
             child.parse_inheritance()
 
@@ -271,10 +281,12 @@ class UMLInstance(object):
         self.associations_to = []
         self.package = package
         self.stereotype = None
+        self.parent = None
 
     def parse(self, element, root):
         self.name = element.get('name')
         self.id = element.get('{%s}id'%ns['xmi'])
+        self.classifier_id = element.get('classifier')
 
         #Detail is sparx sprecific
         #TODO: Put modelling tool in settings and use tool specific parser here
