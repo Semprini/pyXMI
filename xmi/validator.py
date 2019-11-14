@@ -126,34 +126,6 @@ def validate_test_cases(instance, settings):
             
             if not valid_assoc:
                 errors.append( InstanceValidationError(instance,"Incorrect association found from {}(id={}|type={}) to {}".format(instance.name, instance.id, instance.parent.name, assoc.dest_name)) )
-                for cls_assoc in instance.parent.associations_from:
-                    print("From {} | {} | {} | {}".format(instance.name, instance.parent.name, cls_assoc.dest_name, cls_assoc.source_name ))
-                for cls_assoc in instance.parent.associations_to:
-                    print("To {} | {} | {} | {}".format(instance.name, instance.parent.name, cls_assoc.dest_name, cls_assoc.source_name ))
-
-        for assoc in instance.associations_from:
-            valid_assoc = False
-            for cls_assoc in instance.parent.associations_from:
-                if assoc.source.parent in (cls_assoc.source,cls_assoc.source.supertype,cls_assoc.dest,cls_assoc.dest.supertype):
-                    valid_assoc = True
-            for cls_assoc in instance.parent.associations_to:
-                if assoc.dest.parent in (cls_assoc.source,cls_assoc.source.supertype,cls_assoc.dest,cls_assoc.dest.supertype):
-                    valid_assoc = True
-
-            if valid_assoc==False and instance.parent.supertype is not None:
-                for cls_assoc in instance.parent.supertype.associations_from:
-                    if assoc.source.parent in (cls_assoc.source,cls_assoc.source.supertype,cls_assoc.dest,cls_assoc.dest.supertype):
-                        valid_assoc = True
-                for cls_assoc in instance.parent.supertype.associations_to:
-                    if assoc.dest.parent in (cls_assoc.source,cls_assoc.source.supertype,cls_assoc.dest,cls_assoc.dest.supertype):
-                        valid_assoc = True
-
-            if not valid_assoc:
-                errors.append( InstanceValidationError(instance,"Incorrect association found to {} from {}".format(assoc.dest_name, instance.name, )) )
-                for cls_assoc in instance.parent.associations_from:
-                    print("From {} | {} | {} | {}".format(instance.name, instance.parent.name, cls_assoc.dest_name, cls_assoc.source_name ))
-                for cls_assoc in instance.parent.associations_to:
-                    print("To {} | {} | {} | {}".format(instance.name, instance.parent.name, cls_assoc.dest_name, cls_assoc.source_name ))
 
 
         for assoc in instance.associations_from:
