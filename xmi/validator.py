@@ -45,29 +45,39 @@ def validate_package(package,settings):
     errors = []
     
     for cls in package.classes:
+        # Does each class have a domain
         if not hasattr(cls,'domain'):
             errors.append( ClassValidationError(package,cls,"Class does not belong to a domain") )
     
+        # Does each object have a primary key
         if cls.id_attribute == None and cls.is_abstract == False:
             if cls.supertype == None or cls.supertype.id_attribute == None:
                 errors.append( ClassValidationError(package,cls,"no primary key") )
+        
         elif cls.supertype != None:
+            # Do objects with primary keys have a parent class which also has a primary key
             if cls.supertype.id_attribute != None and cls.id_attribute != cls.supertype.id_attribute:
                 errors.append( ClassValidationError(package,cls,"To allow polymorphism the primary key must be defined in only the supertype") )
+            if 'auditable' in cls.stereotypes and 'auditable' not in cls.supertype.stereotypes:
+                errors.append( ClassValidationError(package,cls,"For inherited types to be auditable the supertype ({}) must also be auditable.".format(cls.supertype.name)) )
 
         has_id = False
         for attr in cls.attributes:
-            if attr.stereotype == "auto" and attr.type != "int":
-                errors.append( AttributeValidationError(package,cls,attr,"auto increment field must be int") )
+            # Are all auto increment fields int or bigint
+            if attr.stereotype == "auto" and attr.type not in ["int","bigint"]:
+                errors.append( AttributeValidationError(package,cls,attr,"auto increment field must be int or bigint") )
 
+            # Are there unexpected attribute types
             if attr.classification == None and attr.type not in settings['types'].keys():
                 errors.append( AttributeValidationError(package,cls,attr,"unknown type: {}".format(attr.type)) )
                 
+            # Check if there are multiple Id attributes
             if attr.is_id == True:
                 if has_id == True:
                     errors.append( AttributeValidationError(package,cls,attr,"multiple ID attributes detected") )
                 has_id = True
                 
+            # Check if there are attributes named using reserved keywords
             if attr.name == 'is_deleted':
                 errors.append( AttributeValidationError(package,cls,attr,"is_deleted is a reserved attribute name") )
             
@@ -156,13 +166,7 @@ def validate(recipie_path):
     model_package, test_cases = parse_uml(root_package, tree)
     
     # validations
-    # Does each object have a primary key
-    # Do objects with primary keys have a parent class which also has a primary key
-    # Are all auto increment fields int
     print(validate_package(model_package,settings))
-    
-    # Does each class have a domain
-    # Are there unexpected attribute types
     
     for case in test_cases:
         print(validate_test_cases(case,settings))
