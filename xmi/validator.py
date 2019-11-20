@@ -44,7 +44,10 @@ class AttributeValidationError(object):
 def validate_package(package,settings):
     errors = []
     
+    #print("PACKAGE:{}".format(package.name))
     for cls in package.classes:
+        #print("CLASS:{}".format(cls.name))
+        
         # Does each class have a domain
         if not hasattr(cls,'domain'):
             errors.append( ClassValidationError(package,cls,"Class does not belong to a domain") )

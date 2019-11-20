@@ -122,6 +122,8 @@ class UMLPackage(object):
         else:
             self.path = self.parent.path + self.name + '/'
 
+        #print("PACKAGE:{} | PATH: {}".format(self.name, self.path))
+
         #Detail is sparx sprecific
         #TODO: Put modelling tool in settings and use tool specific parser here
         detail = root.xpath("//element[@xmi:idref='%s']"%self.id, namespaces=ns)[0]
@@ -135,13 +137,14 @@ class UMLPackage(object):
             e_type = child.get('{%s}type'%ns['xmi'])
             
             if e_type == 'uml:Package':
-                cls = UMLPackage(self)
-                cls.parse(child, root)
-                self.children.append( cls )
+                pkg = UMLPackage(self)
+                pkg.parse(child, root)
+                self.children.append( pkg )
 
             elif e_type == 'uml:Class':
                 cls = UMLClass(self)
                 cls.parse(child, root)
+                #print("  CLASS:{}".format(cls.name))
                 if cls.name is not None:
                     self.classes.append( cls )
 
@@ -463,6 +466,12 @@ class UMLClass(object):
         # Detail is sparx sprecific
         #TODO: Put modelling tool in settings and use tool specific parser here
         detail = root.xpath("//element[@xmi:idref='%s']"%self.id, namespaces=ns)[0]
+
+        # Make sure detail type is class as Sparx exports Text and Boundaries as class objects 
+        detail_type = detail.get('{%s}type'%ns['xmi'])
+        if detail_type != "uml:Class":
+            # By setting name to None the class will not be added to the package classes array
+            self.name = None
 
         # Get stereotypes, when multiple are provided only the first is found in the stereotype tag but all are found in xrefs
         xrefs = detail.find('xrefs')
