@@ -85,10 +85,10 @@ def validate_package(package,settings):
         if cls.is_supertype and package.domain != "Common":
             for cls_assoc in cls.associations_from:
                 if package.domain != cls_assoc.dest.package.domain:
-                    errors.append( ClassValidationError(package,cls,"Supertypes must be in the 'Common' domain to have relations from objects in different domains") )
+                    errors.append( ClassValidationError(package,cls,"Supertypes must be in the 'Common' domain to have relations from objects ({}) in different domains").format(cls_assoc.dest.name) )
             for cls_assoc in cls.associations_to:
                 if package.domain != cls_assoc.source.package.domain:
-                    errors.append( ClassValidationError(package,cls,"Supertypes must be in the 'Common' domain to have relations to objects in different domains") )
+                    errors.append( ClassValidationError(package,cls,"Supertypes must be in the 'Common' domain to have relations to objects ({}) in different domains").format(cls_assoc.source.name) )
                 
             
     for child in package.children:
