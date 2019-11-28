@@ -107,6 +107,10 @@ class UMLPackage(object):
             self.inherited_stereotypes += parent.inherited_stereotypes
 
 
+    @property
+    def domain(self):
+        return self.path.split('/')[0]
+
     def parse(self, element, root):
         """ Extract package details, call class parser for classes and self parser for sub-packages.
         Associations are not done here, but in a 2nd pass using the parse_associations function.

@@ -44,9 +44,7 @@ class AttributeValidationError(object):
 def validate_package(package,settings):
     errors = []
     
-    #print("PACKAGE:{}".format(package.name))
     for cls in package.classes:
-        #print("CLASS:{}".format(cls.name))
         
         # Does each class have a domain
         if not hasattr(cls,'domain'):
@@ -83,6 +81,15 @@ def validate_package(package,settings):
             # Check if there are attributes named using reserved keywords
             if attr.name == 'is_deleted':
                 errors.append( AttributeValidationError(package,cls,attr,"is_deleted is a reserved attribute name") )
+
+        if cls.is_supertype and package.domain != "Common":
+            for cls_assoc in cls.associations_from:
+                if package.domain != cls_assoc.dest.package.domain:
+                    errors.append( ClassValidationError(package,cls,"Supertypes must be in the 'Common' domain to have relations from objects in different domains") )
+            for cls_assoc in cls.associations_to:
+                if package.domain != cls_assoc.source.package.domain:
+                    errors.append( ClassValidationError(package,cls,"Supertypes must be in the 'Common' domain to have relations to objects in different domains") )
+                
             
     for child in package.children:
         errors += validate_package(child,settings)
