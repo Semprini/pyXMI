@@ -361,7 +361,7 @@
 			</element>
 			<element xmi:idref="EAPK_3C90BBD3_D039_4f95_B5B9_7D40BC08E92F" xmi:type="uml:Package" name="Test_Domain" scope="public">
 				<model package2="EAID_3C90BBD3_D039_4f95_B5B9_7D40BC08E92F" package="EAPK_AF8E1C4F_DB86_4417_AAEC_98D983BC2AFC" tpos="0" ea_localid="4" ea_eleType="package"/>
-				<properties isSpecification="false" sType="Package" nType="0" scope="public"/>
+				<properties isSpecification="false" sType="Package" nType="0" scope="public" stereotype="domain"/>
 				<project author="atkinp" version="1.0" phase="1.0" created="2019-05-27 14:00:10" modified="2019-05-27 14:00:10" complexity="1" status="Proposed"/>
 				<code gentype="Java"/>
 				<style appearance="BackColor=-1;BorderColor=-1;BorderWidth=-1;FontColor=-1;VSwimLanes=1;HSwimLanes=1;BorderStyle=0;"/>
@@ -556,7 +556,7 @@
 						<initial/>
 						<documentation/>
 						<model ea_localid="2" ea_guid="{35606E75-1728-4828-BD3F-1FEB119700C3}"/>
-						<properties type="Instant" derived="0" precision="0" collection="false" length="0" static="0" duplicates="0" changeability="changeable"/>
+						<properties type="dateTime" derived="0" precision="0" collection="false" length="0" static="0" duplicates="0" changeability="changeable"/>
 						<coords ordered="0" scale="0"/>
 						<containment containment="Not Specified" position="0"/>
 						<stereotype/>

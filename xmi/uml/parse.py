@@ -76,7 +76,7 @@ def parse_test_cases(package):
     test_cases = []
     
     for instance in package.instances:
-        if instance.stereotype in ['request','response']:
+        if instance.stereotype in ['request', 'response']:
             test_cases.append(instance)
     
     for child in package.children:
@@ -126,15 +126,15 @@ class UMLPackage(object):
         else:
             self.path = self.parent.path + self.name + '/'
 
-        #print("PACKAGE:{} | PATH: {}".format(self.name, self.path))
+        # print("PACKAGE:{} | PATH: {}".format(self.name, self.path))
 
-        #Detail is sparx sprecific
-        #TODO: Put modelling tool in settings and use tool specific parser here
+        # Detail is Sparx specific
+        # TODO: Put modelling tool in settings and use tool specific parser here
         detail = root.xpath("//element[@xmi:idref='%s']"%self.id, namespaces=ns)[0]
         properties = detail.find('properties')
         self.stereotype = properties.get('stereotype')
         if self.stereotype is not None:
-            self.inherited_stereotypes.append([self.stereotype,self])
+            self.inherited_stereotypes.append([self.stereotype, self])
 
         # Loop through all child elements and get classes and sub packages
         for child in element:
@@ -439,7 +439,7 @@ class UMLClass(object):
         self.id_attribute = None
         
         for inherited_stereotype, inherited_package in package.inherited_stereotypes:
-            if not hasattr(self,inherited_stereotype):
+            if not hasattr(self, inherited_stereotype):
                 setattr(self, inherited_stereotype, inherited_package )
 
 
