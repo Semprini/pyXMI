@@ -116,15 +116,7 @@ def serialize_instance(instance):
     return ret
 
 
-def parse(recipie_path):
-    global settings
-
-    config_filename = recipie_path + "/config.yaml"
-    os.environ.setdefault("PYXMI_SETTINGS_MODULE", config_filename)
-
-    with open(config_filename, 'r') as config_file:
-        settings = yaml.load(config_file.read(), Loader=yaml.SafeLoader)
-
+def parse(recipie_path, settings):
     tree = etree.parse(settings['source'])
 
     # Check that we have the right XMI version
@@ -150,6 +142,10 @@ def parse(recipie_path):
 
     model_package, test_cases = parse_uml(root_package, tree)
     print("Base Model Package: " + model_package.name)
+    return model_package, test_cases
+
+
+def validate(model_package, test_cases, settings):
 
     print("Validating parsed model")
     errors = validate_package(model_package, settings)
@@ -163,6 +159,22 @@ def parse(recipie_path):
         for error in errors:
             print("    {}".format(error))
 
+
+def generate(model_package, test_cases, recipie_path ):
     print("Generating model output")
     output_model(model_package, recipie_path)
     output_test_cases(test_cases)
+
+
+def run(recipie_path):
+    global settings
+
+    config_filename = recipie_path + "/config.yaml"
+    os.environ.setdefault("PYXMI_SETTINGS_MODULE", config_filename)
+
+    with open(config_filename, 'r') as config_file:
+        settings = yaml.load(config_file.read(), Loader=yaml.SafeLoader)
+
+    model_package, test_cases = parse(recipie_path, settings)
+    validate( model_package, test_cases, settings )
+    generate( model_package, test_cases, recipie_path )

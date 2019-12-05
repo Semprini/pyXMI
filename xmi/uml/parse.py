@@ -99,6 +99,7 @@ class UMLPackage(object):
         self.parent = parent
         self.stereotype = None
         self.inherited_stereotypes = []
+        self.documentation = ""
         
         if self.parent is None:
             self.root_package=self
@@ -133,6 +134,10 @@ class UMLPackage(object):
         detail = root.xpath("//element[@xmi:idref='%s']"%self.id, namespaces=ns)[0]
         properties = detail.find('properties')
         self.stereotype = properties.get('stereotype')
+        self.documentation = properties.get('documentation')
+        if self.documentation is None:
+            self.documentation = ""
+        
         if self.stereotype is not None:
             self.inherited_stereotypes.append([self.stereotype, self])
 
@@ -300,6 +305,7 @@ class UMLInstance(object):
         detail = root.xpath("//element[@xmi:idref='%s']"%self.id, namespaces=ns)[0]
         properties = detail.find('properties')
         self.stereotype = properties.get('stereotype')
+        self.documentation = properties.get('documentation')
         
         # Create attributes for each item found in the runstate
         # TODO: Change this to using an re
@@ -437,6 +443,7 @@ class UMLClass(object):
         self.is_supertype = False
         self.stereotypes = []
         self.id_attribute = None
+        self.documentation = ""
         
         for inherited_stereotype, inherited_package in package.inherited_stereotypes:
             if not hasattr(self, inherited_stereotype):
@@ -470,6 +477,12 @@ class UMLClass(object):
         # Detail is sparx sprecific
         #TODO: Put modelling tool in settings and use tool specific parser here
         detail = root.xpath("//element[@xmi:idref='%s']"%self.id, namespaces=ns)[0]
+        properties = detail.find('properties')
+        self.documentation = properties.get('documentation')
+        if self.documentation is None:
+            self.documentation = ""
+        else:
+            print( self.documentation )
 
         # Make sure detail type is class as Sparx exports Text and Boundaries as class objects 
         detail_type = detail.get('{%s}type'%ns['xmi'])

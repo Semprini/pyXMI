@@ -6,6 +6,9 @@ templates:
 - dest: ./build/test_output{{package.path}}{{package.name}}.jdl
   level: package
   source: entities.jdl
+- dest: ./build/doc_output{{package.path}}{{package.name}}.html
+  level: package
+  source: confluence.html
 - dest: ./build/test_output/entities{{cls.package.path}}{{cls.name}}.java
   level: class
   source: pojos.java

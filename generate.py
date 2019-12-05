@@ -8,5 +8,5 @@ if __name__ == '__main__':
     else:
         recipie_path = str(sys.argv[1])
 
-    generator.parse(recipie_path)
+    generator.run(recipie_path)
     

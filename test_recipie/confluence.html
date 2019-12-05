@@ -1,0 +1,24 @@
+<h1 id="Models-RetailTest-Model">{{ package.name }}</h1>
+
+{% for child in package.children %}
+<h2 id="Models-RetailTest-TestDomain">{{ child.name }}</h2><p>Documentation about the package</p>
+
+<h3 id="Models-RetailTest-Classes">Classes</h3>
+<div class="table-wrap">
+<table class="confluenceTable tablesorter tablesorter-default" resolved="" role="grid">
+<thead>
+    <tr role="row" class="tablesorter-headerRow">
+        <th class="confluenceTh tablesorter-header sortableHeader tablesorter-headerUnSorted" data-column="0" tabindex="0" scope="col" role="columnheader" aria-disabled="false" unselectable="on" aria-sort="none" aria-label="Name: No sort applied, activate to apply an ascending sort" style="user-select: none;"><div class="tablesorter-header-inner">Name</div></th>
+        <th class="confluenceTh tablesorter-header sortableHeader tablesorter-headerUnSorted" data-column="1" tabindex="0" scope="col" role="columnheader" aria-disabled="false" unselectable="on" aria-sort="none" aria-label="Stereotypes: No sort applied, activate to apply an ascending sort" style="user-select: none;"><div class="tablesorter-header-inner">Stereotypes</div></th>
+        <th colspan="1" class="confluenceTh tablesorter-header sortableHeader tablesorter-headerUnSorted" data-column="2" tabindex="0" scope="col" role="columnheader" aria-disabled="false" unselectable="on" aria-sort="none" aria-label="&nbsp;Supertype: No sort applied, activate to apply an ascending sort" style="user-select: none;"><div class="tablesorter-header-inner">&nbsp;Supertype</div></th>
+        <th colspan="1" class="confluenceTh tablesorter-header sortableHeader tablesorter-headerUnSorted" data-column="3" tabindex="0" scope="col" role="columnheader" aria-disabled="false" unselectable="on" aria-sort="none" aria-label="&nbsp;Docs: No sort applied, activate to apply an ascending sort" style="user-select: none;"><div class="tablesorter-header-inner">&nbsp;Docs</div></th>
+    </tr>
+</thead>
+<tbody aria-live="polite" aria-relevant="all">
+{% for cls in child.classes %}
+<tr role="row"><td colspan="1" class="confluenceTd">{{ cls.name }}</td><td colspan="1" class="confluenceTd">{{ cls.stereotypes }}</td><td colspan="1" class="confluenceTd">{{ cls.supertype.name }}</td><td colspan="1" class="confluenceTd"></td></tr>
+{% endfor %}
+</tbody>
+</table></div>
+{% endfor %}
+
