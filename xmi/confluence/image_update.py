@@ -1,7 +1,7 @@
 import os
 import glob
 
-from util import basic_auth, http_post, http_get_json
+from xmi.confluence.util import basic_auth, http_post, http_get_json
 
 
 def update_images(auth, content_id, path):

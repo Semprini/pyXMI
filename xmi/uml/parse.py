@@ -100,6 +100,7 @@ class UMLPackage(object):
         self.stereotype = None
         self.inherited_stereotypes = []
         self.documentation = ""
+        self.diagrams = []
         
         if self.parent is None:
             self.root_package=self
@@ -137,6 +138,11 @@ class UMLPackage(object):
         self.documentation = properties.get('documentation')
         if self.documentation is None:
             self.documentation = ""
+
+        diagram_elements = root.xpath("//diagrams/diagram/model[@package='%s']"%self.id)
+        for diagram_model in diagram_elements:
+            diagram = diagram_model.getparent()
+            self.diagrams.append( diagram.get('{%s}id'%ns['xmi']) )
         
         if self.stereotype is not None:
             self.inherited_stereotypes.append([self.stereotype, self])
