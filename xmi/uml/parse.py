@@ -481,8 +481,6 @@ class UMLClass(object):
         self.documentation = properties.get('documentation')
         if self.documentation is None:
             self.documentation = ""
-        else:
-            print( self.documentation )
 
         # Make sure detail type is class as Sparx exports Text and Boundaries as class objects 
         detail_type = detail.get('{%s}type'%ns['xmi'])
