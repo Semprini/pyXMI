@@ -138,8 +138,6 @@ def parse(recipie_path, settings):
         return
     root_package = root_package[0]
 
-    extension = tree.find('xmi:Extension', ns)
-
     model_package, test_cases = parse_uml(root_package, tree)
     print("Base Model Package: " + model_package.name)
     return model_package, test_cases

@@ -124,11 +124,11 @@ class UMLPackage(object):
 
         # Package path is hierarchical. Add the current path onto it's parent
         if self.parent is None:
-            self.path = '/'
+            self.path = '/{}/'.format(settings['root_package'])
         else:
             self.path = self.parent.path + self.name + '/'
 
-        # print("PACKAGE:{} | PATH: {}".format(self.name, self.path))
+        #print("PACKAGE:{} | PATH: {}".format(self.name, self.path))
 
         # Detail is Sparx specific
         # TODO: Put modelling tool in settings and use tool specific parser here
