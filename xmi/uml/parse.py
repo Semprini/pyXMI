@@ -545,7 +545,7 @@ class UMLAttribute(object):
             self.is_id = False
             
         #Todo: decide how to include string lengths in UML
-        if self.type == 'string':
+        if self.type.lower() == 'string':
             self.length = 100
 
         stereotype = detail.find('stereotype')
