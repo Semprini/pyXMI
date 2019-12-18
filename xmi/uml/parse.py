@@ -124,7 +124,8 @@ class UMLPackage(object):
 
         # Package path is hierarchical. Add the current path onto it's parent
         if self.parent is None:
-            self.path = '/{}/'.format(settings['root_package'])
+            #self.path = '/{}/'.format(settings['root_package'])
+            self.path = '/'
         else:
             self.path = self.parent.path + self.name + '/'
 
