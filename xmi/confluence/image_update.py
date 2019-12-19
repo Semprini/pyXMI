@@ -20,14 +20,13 @@ def update_images(auth, content_id, path):
         if conf_attachment is not None:
             # Update if different file size
             if os.path.getsize(file) != conf_attachment['extensions']['fileSize']:
-                url = "https://jiragenesisenergy.atlassian.net/wiki/rest/api/content/{}/child/attachment/{}/data".format( content_id, attachment['id'] )
+                url = "https://jiragenesisenergy.atlassian.net/wiki/rest/api/content/{}/child/attachment/{}/data".format( content_id, conf_attachment['id'] )
                 http_post( url, auth, None, file, None )
                 print("Uploaded local file {} to confluence".format(file))
             else:
                 print("Skipping local file {} as same file size detected in confluence".format(file))
         else:
-            # TODO: Upload new attachment
-            url = "https://jiragenesisenergy.atlassian.net/wiki/rest/api/content/{}/child/attachment/".format( content_id, attachment['id'] )
+            url = "https://jiragenesisenergy.atlassian.net/wiki/rest/api/content/{}/child/attachment/".format( content_id )
             http_post( url, auth, None, file, None )
             print("Uploaded new local file {} to confluence".format(file))
 

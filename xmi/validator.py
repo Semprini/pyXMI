@@ -65,8 +65,11 @@ def validate_package(package, settings):
                 errors.append(ClassValidationError(package, cls,
                                                    "For inherited types to be auditable the supertype ({}) must also be auditable.".format(cls.supertype.name)))
 
+        attr_names = []
         has_id = False
         for attr in cls.attributes:
+            attr_names.append(attr.name)
+            
             # Are all auto increment fields int or bigint
             if attr.stereotype == "auto" and attr.type not in ["int", "bigint"]:
                 errors.append(
@@ -95,6 +98,17 @@ def validate_package(package, settings):
                 if package.domain != cls_assoc.source.package.domain:
                     errors.append(ClassValidationError(package, cls,
                                                        "Supertypes must be in the 'Common' domain to have relations to objects ({}) in different domains").format(cls_assoc.source.name))
+
+        for cls_assoc in cls.associations_from:
+            if cls_assoc.dest.name in attr_names:
+                errors.append(ClassValidationError(package, cls,
+                                                       "Association name {} clashing with attribute").format(cls_assoc.dest.name))
+
+        for cls_assoc in cls.associations_to:
+            if cls_assoc.source.name in attr_names:
+                errors.append(ClassValidationError(package, cls,
+                                                       "Association name {} clashing with attribute").format(cls_assoc.source.name))
+        
 
     for child in package.children:
         errors += validate_package(child, settings)
